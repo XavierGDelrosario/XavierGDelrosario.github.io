@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UBC Course Query — Live Demo · Xavier Del Rosario</title>
+<meta name="description" content="Live in-browser demo of the InsightUBC query engine — filters, aggregation, and bar-chart visualization." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
+  })();
+</script>
+<style>
+  :root {
+    --bg: #0b0f17; --bg-soft: #121826; --card: #161d2c; --card-hover: #1c2436;
+    --border: #243049; --text: #e6ebf5; --muted: #97a3bd; --accent: #8fbaff;
+    --shadow: 0 18px 40px -22px rgba(0,0,0,.8); --nav-bg: rgba(11,15,23,.72);
+  }
+  html[data-theme="light"] {
+    --bg: #f5f8fd; --bg-soft: #ffffff; --card: #ffffff; --card-hover: #eef3fb;
+    --border: #d8e1ef; --text: #1a2333; --muted: #58647c; --accent: #5b8def;
+    --shadow: 0 18px 40px -26px rgba(40,60,110,.4); --nav-bg: rgba(255,255,255,.8);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; transition: background .3s; }
+  body {
+    margin: 0; font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+    transition: background .3s, color .3s;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(840px, 92vw); margin: 0 auto; }
+
+  nav {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(12px);
+    background: var(--nav-bg); border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
+  .nav-inner .wrap { width: 100%; }
+  .brand { font-weight: 800; letter-spacing: .3px; color: var(--accent); }
+  .back { color: var(--muted); font-size: 14px; font-weight: 600; transition: color .2s; }
+  .back:hover { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 10px; cursor: pointer;
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    transition: border-color .2s, transform .12s;
+  }
+  .theme-toggle:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .moon { display: none; }
+  html[data-theme="light"] .theme-toggle .moon { display: block; }
+  html[data-theme="light"] .theme-toggle .sun { display: none; }
+
+  header.page { padding: 46px 0 10px; }
+  header.page h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); margin: 0 0 6px; letter-spacing: -1px; }
+  header.page h1 .accent { color: var(--accent); }
+  header.page p { color: var(--muted); margin: 0; max-width: 640px; }
+  main { padding: 26px 0 60px; }
+
+  .demo-intro { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+  .demo-intro code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--bg-soft); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--border); }
+
+  .q-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .q-presets button {
+    font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); transition: border-color .2s, transform .12s;
+  }
+  .q-presets button:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .q-editor {
+    width: 100%; min-height: 210px; resize: vertical; tab-size: 2;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5;
+    padding: 14px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--bg-soft); color: var(--text);
+  }
+  .q-editor:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  .demo-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .demo-controls button {
+    font-family: inherit; font-weight: 600; font-size: 13.5px; cursor: pointer;
+    padding: 9px 18px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); transition: border-color .2s, transform .12s;
+  }
+  .demo-controls button:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .demo-controls button.accent { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+
+  .result-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; margin-top: 6px; }
+  table.dt { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.dt th, table.dt td { padding: 8px 13px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.dt th { position: sticky; top: 0; background: var(--card); color: var(--text); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; z-index: 1; }
+  table.dt td { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  table.dt tr:last-child td { border-bottom: none; }
+  table.dt tr:hover td { background: var(--card-hover); color: var(--text); }
+  .row-count { font-size: 12px; color: var(--muted); margin: 10px 2px 0; font-family: 'JetBrains Mono', monospace; }
+
+  .chart { margin-top: 22px; }
+  .chart h4 { margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); font-weight: 600; }
+  .bar-row { display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-label { font-size: 12px; color: var(--text); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; height: 24px; position: relative; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 5px 0 0 5px; min-width: 2px; transition: width .5s ease; }
+  .bar-val { position: absolute; right: 8px; top: 0; line-height: 24px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text); }
+  .demo-err { color: #d63b3b; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; margin-top: 12px; }
+
+  /* Datasets panel */
+  .datasets { border: 1px solid var(--border); border-radius: 12px; background: var(--bg-soft); padding: 16px 18px; margin-bottom: 16px; }
+  .ds-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .ds-head h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+  .ds-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ds-head select, .ds-upload { font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; transition: border-color .2s; }
+  .ds-head select:focus, .ds-upload:focus-within { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .ds-upload:hover { border-color: var(--accent); }
+  .ds-msg { font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-top: 10px; color: var(--muted); }
+  .ds-msg.err { color: #d63b3b; }
+  .ds-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ds-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 6px 8px 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .ds-chip .ds-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+  .ds-chip button { border: none; background: var(--bg-soft); color: var(--muted); width: 20px; height: 20px; border-radius: 6px; cursor: pointer; font-size: 14px; line-height: 1; transition: color .2s, background .2s; }
+  .ds-chip button:hover { color: var(--text); background: var(--card-hover); }
+  .ds-empty { font-size: 12.5px; color: var(--muted); }
+
+  .overlay-ctl { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; font-size: 13px; color: var(--muted); }
+  .overlay-ctl select { font-family: inherit; font-size: 13px; padding: 8px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
+  .overlay-ctl select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  /* Comparison (grouped) chart */
+  .legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .legend .lg { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .legend .lg.a { background: var(--accent); }
+  .legend .lg.b { background: var(--muted); margin-left: 16px; }
+  .cmp-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; margin-bottom: 12px; align-items: center; }
+  .cmp-bars { display: grid; gap: 5px; }
+  .bar-fill.a { background: var(--accent); }
+  .bar-fill.b { background: var(--muted); }
+
+  .docs { border: 1px solid var(--border); border-radius: 12px; background: var(--bg-soft); padding: 20px 24px; margin-top: 16px; }
+  .docs h3 { margin: 0 0 4px; font-size: 1.1rem; }
+  .docs h4 { margin: 20px 0 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+  .docs p { margin: 0 0 10px; color: var(--muted); font-size: 13.5px; }
+  .docs ul { margin: 0 0 12px; padding-left: 20px; color: var(--muted); font-size: 13.5px; }
+  .docs li { margin-bottom: 5px; }
+  .docs code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--card); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--border); color: var(--text); }
+  .docs pre { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.55; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; overflow-x: auto; color: var(--text); margin: 0 0 12px; }
+  .docs table.fields { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px; }
+  .docs table.fields th, .docs table.fields td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .docs table.fields th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  .docs table.fields td { color: var(--muted); }
+  .docs table.fields td code { background: none; border: none; padding: 0; color: var(--accent); }
+  .docs a.repo { color: var(--accent); font-weight: 600; }
+
+  footer { padding: 30px 0 50px; text-align: center; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="back" href="index.html">← Back to portfolio</a>
+    <div class="nav-right">
+      <div class="brand">Xavier Del Rosario</div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="page">
+  <div class="wrap">
+    <h1>UBC Course Query</h1>
+    <p>The InsightUBC query engine, running entirely in your browser. Add or remove datasets, query any one of them, and overlay two on the same chart to compare.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <p class="demo-intro">Edit the InsightUBC query below (the same JSON grammar the real engine accepts) or pick a preset, then run it. A query references one dataset by its <code>id</code> prefix (e.g. <code>sections_avg</code>); set an <strong>Overlay</strong> to plot a second dataset on the same chart. Results render as a table and a bar chart.</p>
+
+    <div class="datasets">
+      <div class="ds-head">
+        <h3>Datasets</h3>
+        <div class="ds-actions">
+          <select id="datasetAdd"><option value="">+ Add sample…</option></select>
+          <label class="ds-upload">Upload JSON…<input type="file" id="datasetFile" accept=".json,application/json" hidden></label>
+        </div>
+      </div>
+      <div class="ds-chips" id="datasetChips"></div>
+      <div class="ds-msg" id="datasetMsg" hidden></div>
+    </div>
+
+    <div class="q-presets" id="insightPresets"></div>
+    <textarea class="q-editor" id="insightQuery" spellcheck="false"></textarea>
+    <div class="demo-controls">
+      <button class="accent" id="insightRun">Run query</button>
+      <button id="insightFormat">Format JSON</button>
+      <button id="insightDocsBtn" aria-expanded="false">Query reference</button>
+      <span class="overlay-ctl">
+        <label for="datasetOverlay">Overlay:</label>
+        <select id="datasetOverlay"><option value="">None</option></select>
+      </span>
+    </div>
+
+    <section class="docs" id="insightDocs" hidden>
+      <h3>Query reference</h3>
+      <p>A query is a JSON object with a <code>WHERE</code> filter and an <code>OPTIONS</code> block, plus an optional <code>TRANSFORMATIONS</code> block for aggregation.</p>
+      <pre>{
+  "WHERE":   { ...filter... },
+  "OPTIONS": {
+    "COLUMNS": ["sections_dept", "sections_avg"],
+    "ORDER":   "sections_avg"
+  }
+}</pre>
+
+      <h4>Datasets</h4>
+      <p>Each dataset has an <code>id</code>, a <code>kind</code>, and a row count — manage them in the <strong>Datasets</strong> panel: add a built-in sample, or <strong>Upload JSON…</strong> to add your own. Uploads accept a JSON array of rows, or an object with a <code>result</code> array (the raw UBC format); the fields <code>dept, id, avg, instructor, title, pass, fail, audit, year, uuid</code> are recognized, and the raw keys <code>Subject, Course, Avg, Professor, Title, Pass, Fail, Audit, Year</code> are mapped automatically. The dataset <code>id</code> comes from the file name (no underscore allowed).</p>
+      <p>A single query may reference <strong>only one</strong> dataset; referencing two raises an error. To compare datasets, leave the query targeting one dataset and pick a second under <strong>Overlay</strong> — the same query is re-run against it (its keys re-prefixed automatically) and both series are drawn on one chart.</p>
+
+      <h4>Fields</h4>
+      <p>Every key is written as <code>&lt;datasetId&gt;_&lt;field&gt;</code> (e.g. <code>sections_avg</code>). The sample datasets share the same fields below — any other key (or a numeric field used where text is expected, and vice-versa) is rejected.</p>
+      <table class="fields">
+        <thead><tr><th>Type</th><th>Fields</th><th>Used with</th></tr></thead>
+        <tbody>
+          <tr><td>Numeric</td><td><code>avg</code> <code>pass</code> <code>fail</code> <code>audit</code> <code>year</code></td><td>GT, LT, EQ · AVG, MAX, MIN, SUM</td></tr>
+          <tr><td>Text</td><td><code>dept</code> <code>id</code> <code>instructor</code> <code>title</code> <code>uuid</code></td><td>IS (with wildcards)</td></tr>
+        </tbody>
+      </table>
+
+      <h4>WHERE — filters</h4>
+      <ul>
+        <li><strong>Logic:</strong> <code>AND</code> / <code>OR</code> take an array of filters; <code>NOT</code> takes a single filter.</li>
+        <li><strong>Numeric comparison:</strong> <code>GT</code>, <code>LT</code>, <code>EQ</code> — e.g. <code>{ "GT": { "sections_avg": 90 } }</code>.</li>
+        <li><strong>Text match:</strong> <code>IS</code> — e.g. <code>{ "IS": { "sections_dept": "cpsc" } }</code>. Wildcards: <code>"cpsc*"</code> (starts with), <code>"*cpsc"</code> (ends with), <code>"*cpsc*"</code> (contains). The <code>*</code> is only allowed at the start and/or end.</li>
+        <li><strong>Match everything:</strong> an empty <code>"WHERE": {}</code> returns all rows.</li>
+      </ul>
+      <pre>{ "AND": [
+    { "IS": { "sections_dept": "cpsc" } },
+    { "GT": { "sections_avg": 80 } }
+] }</pre>
+
+      <h4>OPTIONS</h4>
+      <ul>
+        <li><code>COLUMNS</code> (required): a non-empty array of keys to return.</li>
+        <li><code>ORDER</code> (optional): a single key string, or <code>{ "dir": "UP" | "DOWN", "keys": [...] }</code>. Every ORDER key must also appear in COLUMNS.</li>
+      </ul>
+
+      <h4>TRANSFORMATIONS — aggregation (optional)</h4>
+      <pre>"TRANSFORMATIONS": {
+  "GROUP": ["sections_dept"],
+  "APPLY": [
+    { "avgGrade":    { "AVG":   "sections_avg" } },
+    { "numSections": { "COUNT": "sections_uuid" } }
+  ]
+}</pre>
+      <ul>
+        <li><code>GROUP</code>: one or more keys to group rows by.</li>
+        <li><code>APPLY</code> tokens: <code>AVG</code>, <code>MAX</code>, <code>MIN</code>, <code>SUM</code> (numeric fields) and <code>COUNT</code> (any field — counts distinct values). <code>AVG</code>/<code>SUM</code> are rounded to two decimals.</li>
+        <li>When transforming, <code>COLUMNS</code> may only contain GROUP keys and the names you define in APPLY.</li>
+      </ul>
+
+      <p>Queries returning more than 5000 rows raise a <code>ResultTooLargeError</code>. Full project source is on <a class="repo" href="https://github.com/XavierGDelrosario/UBC-Insight" target="_blank" rel="noopener">GitHub ↗</a>.</p>
+    </section>
+
+    <div id="insightError" class="demo-err" hidden></div>
+    <div id="insightOutput"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">Computer Science · University of British Columbia · Built with plain HTML, CSS &amp; JavaScript</div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* Theme toggle */
+  const themeBtn = document.getElementById("themeToggle");
+  themeBtn.addEventListener("click", function () {
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
+    const next = isLight ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+
+  /* Shared render helpers */
+  function esc(v) {
+    return String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  }
+  function tableHTML(columns, rows) {
+    let h = '<div class="result-wrap"><table class="dt"><thead><tr>';
+    columns.forEach(c => (h += "<th>" + esc(c) + "</th>"));
+    h += "</tr></thead><tbody>";
+    if (!rows.length) {
+      h += '<tr><td colspan="' + columns.length + '" style="text-align:center">No rows returned.</td></tr>';
+    } else {
+      rows.forEach(r => {
+        h += "<tr>";
+        r.forEach(cell => (h += "<td>" + esc(cell === null || cell === undefined ? "—" : cell) + "</td>"));
+        h += "</tr>";
+      });
+    }
+    h += "</tbody></table></div>";
+    h += '<div class="row-count">' + rows.length + " row" + (rows.length === 1 ? "" : "s") + " returned</div>";
+    return h;
+  }
+  function chartHTML(heading, labels, values) {
+    const max = Math.max.apply(null, values.concat([0])) || 1;
+    let h = '<div class="chart"><h4>' + esc(heading) + "</h4>";
+    labels.forEach((lab, i) => {
+      const pct = Math.max(2, (values[i] / max) * 100);
+      h += '<div class="bar-row"><div class="bar-label" title="' + esc(lab) + '">' + esc(lab) + "</div>" +
+           '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div>' +
+           '<span class="bar-val">' + esc(values[i]) + "</span></div></div>";
+    });
+    h += "</div>";
+    return h;
+  }
+  // Two-series grouped chart. cats: string[]; a/b: { name, map: {cat: number} }
+  function groupedChartHTML(heading, cats, a, b) {
+    let max = 0;
+    cats.forEach(c => { max = Math.max(max, a.map[c] || 0, b.map[c] || 0); });
+    max = max || 1;
+    let h = '<div class="chart"><h4>' + esc(heading) + "</h4>";
+    h += '<div class="legend"><span class="lg a"></span>' + esc(a.name) +
+         '<span class="lg b"></span>' + esc(b.name) + "</div>";
+    cats.forEach(c => {
+      h += '<div class="cmp-row"><div class="bar-label" title="' + esc(c) + '">' + esc(c) + '</div><div class="cmp-bars">';
+      [["a", a], ["b", b]].forEach(([cls, s]) => {
+        const v = s.map[c];
+        const pct = v === undefined ? 0 : Math.max(2, (v / max) * 100);
+        h += '<div class="bar-track"><div class="bar-fill ' + cls + '" style="width:' + pct + '%"></div>' +
+             '<span class="bar-val">' + (v === undefined ? "—" : esc(v)) + "</span></div>";
+      });
+      h += "</div></div>";
+    });
+    h += "</div>";
+    return h;
+  }
+
+  /* ============================================================
+     UBC COURSE QUERY  (InsightUBC engine, in-browser)
+     WHERE (AND/OR/NOT/GT/LT/EQ/IS), OPTIONS (COLUMNS/ORDER),
+     TRANSFORMATIONS (GROUP + APPLY: MAX/MIN/AVG/COUNT/SUM).
+     Add/remove datasets; overlay a second dataset on one chart.
+     ============================================================ */
+  const Insight = (function () {
+    const MFIELDS = ["avg", "pass", "fail", "audit", "year"];
+    const SFIELDS = ["dept", "id", "instructor", "title", "uuid"];
+    const FIELDS = MFIELDS.concat(SFIELDS);
+
+    // Available datasets (all share the same "sections" field schema)
+    const DATASETS = {
+      sections: { id: "sections", kind: "sections", label: "sections — 2023–24 offerings", rows: [
+        { dept: "cpsc", id: "110", avg: 78.2, instructor: "kiczales, gregor", title: "computation programs", pass: 320, fail: 22, audit: 1, year: 2023, uuid: "1001" },
+        { dept: "cpsc", id: "210", avg: 74.6, instructor: "wolfman, steven", title: "software construction", pass: 280, fail: 31, audit: 0, year: 2023, uuid: "1002" },
+        { dept: "cpsc", id: "310", avg: 81.4, instructor: "palyart, marc", title: "software engineering", pass: 190, fail: 8, audit: 2, year: 2024, uuid: "1003" },
+      { dept: "cpsc", id: "320", avg: 70.1, instructor: "evans, david", title: "algorithm design", pass: 210, fail: 40, audit: 0, year: 2024, uuid: "1004" },
+      { dept: "cpsc", id: "404", avg: 85.3, instructor: "hu, alan", title: "database systems", pass: 95, fail: 3, audit: 1, year: 2024, uuid: "1005" },
+      { dept: "math", id: "100", avg: 68.9, instructor: "lee, jane", title: "differential calculus", pass: 410, fail: 88, audit: 0, year: 2023, uuid: "2001" },
+      { dept: "math", id: "200", avg: 72.3, instructor: "froese, robert", title: "multivariable calculus", pass: 330, fail: 51, audit: 0, year: 2023, uuid: "2002" },
+      { dept: "math", id: "221", avg: 97.09, instructor: "anstee, richard", title: "matrix algebra", pass: 260, fail: 12, audit: 1, year: 2024, uuid: "2003" },
+      { dept: "math", id: "302", avg: 88.7, instructor: "", title: "probability", pass: 140, fail: 6, audit: 0, year: 2024, uuid: "2004" },
+      { dept: "biol", id: "112", avg: 65.4, instructor: "gass, gillian", title: "cell biology", pass: 380, fail: 102, audit: 0, year: 2023, uuid: "3001" },
+      { dept: "biol", id: "200", avg: 71.8, instructor: "berger, kathy", title: "fundamentals genetics", pass: 290, fail: 33, audit: 0, year: 2024, uuid: "3002" },
+      { dept: "biol", id: "300", avg: 79.5, instructor: "o'connor, mary", title: "ecology", pass: 150, fail: 9, audit: 0, year: 2024, uuid: "3003" },
+      { dept: "engl", id: "110", avg: 76.0, instructor: "barbour, john", title: "approaches literature", pass: 240, fail: 14, audit: 0, year: 2023, uuid: "4001" },
+      { dept: "engl", id: "220", avg: 82.6, instructor: "potter, tiffany", title: "literature in english", pass: 130, fail: 4, audit: 1, year: 2024, uuid: "4002" },
+      { dept: "phys", id: "101", avg: 67.2, instructor: "waltham, chris", title: "energy waves", pass: 350, fail: 76, audit: 0, year: 2023, uuid: "5001" },
+      { dept: "phys", id: "200", avg: 73.9, instructor: "gay, ian", title: "relativity quanta", pass: 180, fail: 21, audit: 0, year: 2024, uuid: "5002" },
+      { dept: "phys", id: "301", avg: 90.2, instructor: "van waerbeke, ludovic", title: "electricity magnetism", pass: 88, fail: 2, audit: 0, year: 2024, uuid: "5003" },
+      { dept: "cpsc", id: "121", avg: 75.5, instructor: "belleville, patrice", title: "models computation", pass: 300, fail: 28, audit: 0, year: 2024, uuid: "1006" }
+      ] },
+      archive: { id: "archive", kind: "sections", label: "archive — earlier years", rows: [
+        { dept: "cpsc", id: "110", avg: 73.8, instructor: "kiczales, gregor", title: "computation programs", pass: 240, fail: 38, audit: 0, year: 2018, uuid: "9001" },
+        { dept: "cpsc", id: "210", avg: 70.5, instructor: "allen, meghan", title: "software construction", pass: 180, fail: 41, audit: 0, year: 2018, uuid: "9002" },
+        { dept: "cpsc", id: "310", avg: 78.1, instructor: "baniassad, elisa", title: "software engineering", pass: 120, fail: 9, audit: 0, year: 2019, uuid: "9003" },
+        { dept: "math", id: "100", avg: 64.2, instructor: "lee, jane", title: "differential calculus", pass: 300, fail: 96, audit: 0, year: 2018, uuid: "9004" },
+        { dept: "math", id: "221", avg: 90.4, instructor: "anstee, richard", title: "matrix algebra", pass: 200, fail: 15, audit: 0, year: 2019, uuid: "9005" },
+        { dept: "biol", id: "112", avg: 62.7, instructor: "gass, gillian", title: "cell biology", pass: 280, fail: 110, audit: 0, year: 2018, uuid: "9006" },
+        { dept: "biol", id: "200", avg: 68.9, instructor: "berger, kathy", title: "fundamentals genetics", pass: 210, fail: 35, audit: 0, year: 2019, uuid: "9007" },
+        { dept: "engl", id: "110", avg: 74.5, instructor: "barbour, john", title: "approaches literature", pass: 190, fail: 12, audit: 0, year: 2018, uuid: "9008" },
+        { dept: "phys", id: "101", avg: 63.9, instructor: "waltham, chris", title: "energy waves", pass: 260, fail: 82, audit: 0, year: 2018, uuid: "9009" },
+        { dept: "phys", id: "301", avg: 86.4, instructor: "van waerbeke, ludovic", title: "electricity magnetism", pass: 70, fail: 4, audit: 0, year: 2019, uuid: "9010" }
+      ] },
+      okanagan: { id: "okanagan", kind: "sections", label: "okanagan — UBCO campus", rows: [
+        { dept: "cpsc", id: "111", avg: 76.9, instructor: "rahman, mahmudur", title: "intro programming", pass: 130, fail: 12, audit: 0, year: 2024, uuid: "8001" },
+        { dept: "cpsc", id: "221", avg: 72.4, instructor: "lawrence, ramon", title: "data structures", pass: 110, fail: 18, audit: 0, year: 2024, uuid: "8002" },
+        { dept: "math", id: "100", avg: 66.8, instructor: "doebeli, michael", title: "differential calculus", pass: 150, fail: 30, audit: 0, year: 2024, uuid: "8003" },
+        { dept: "biol", id: "116", avg: 67.2, instructor: "durston, adam", title: "biology fundamentals", pass: 120, fail: 22, audit: 0, year: 2024, uuid: "8004" },
+        { dept: "engl", id: "112", avg: 77.0, instructor: "grafton, kathryn", title: "writing rhetoric", pass: 95, fail: 6, audit: 0, year: 2024, uuid: "8005" },
+        { dept: "phys", id: "111", avg: 70.1, instructor: "deutsch, miriam", title: "intro physics", pass: 100, fail: 14, audit: 0, year: 2024, uuid: "8006" }
+      ] }
+    };
+    let loaded = new Set(["sections", "archive"]);
+
+    const PRESETS = [
+      {
+        label: "Top averages (avg > 85)",
+        q: { WHERE: { GT: { sections_avg: 85 } },
+             OPTIONS: { COLUMNS: ["sections_dept", "sections_id", "sections_avg"], ORDER: { dir: "DOWN", keys: ["sections_avg"] } } }
+      },
+      {
+        label: "CPSC courses, sorted",
+        q: { WHERE: { AND: [{ IS: { sections_dept: "cpsc" } }, { GT: { sections_avg: 74 } }] },
+             OPTIONS: { COLUMNS: ["sections_id", "sections_title", "sections_avg"], ORDER: "sections_avg" } }
+      },
+      {
+        label: "Avg by dept (aggregation)",
+        q: { WHERE: {},
+             OPTIONS: { COLUMNS: ["sections_dept", "avgGrade", "maxGrade", "numSections"], ORDER: { dir: "DOWN", keys: ["avgGrade"] } },
+             TRANSFORMATIONS: { GROUP: ["sections_dept"],
+               APPLY: [ { avgGrade: { AVG: "sections_avg" } }, { maxGrade: { MAX: "sections_avg" } }, { numSections: { COUNT: "sections_uuid" } } ] } }
+      },
+      {
+        label: "Wildcard: titles with 'calculus'",
+        q: { WHERE: { IS: { sections_title: "*calculus*" } },
+             OPTIONS: { COLUMNS: ["sections_dept", "sections_id", "sections_title", "sections_avg"] } }
+      },
+      {
+        label: "Compare avg by dept (2 datasets)",
+        overlay: "archive",
+        q: { WHERE: {},
+             OPTIONS: { COLUMNS: ["sections_dept", "avgGrade"], ORDER: { dir: "DOWN", keys: ["avgGrade"] } },
+             TRANSFORMATIONS: { GROUP: ["sections_dept"], APPLY: [ { avgGrade: { AVG: "sections_avg" } } ] } }
+      }
+    ];
+
+    const editor = document.getElementById("insightQuery");
+    const errEl = document.getElementById("insightError");
+    const outEl = document.getElementById("insightOutput");
+    const chipsEl = document.getElementById("datasetChips");
+    const addSel = document.getElementById("datasetAdd");
+    const overlaySel = document.getElementById("datasetOverlay");
+    const fileInput = document.getElementById("datasetFile");
+    const msgEl = document.getElementById("datasetMsg");
+
+    const fieldOf = k => { const i = k.indexOf("_"); return i < 0 ? null : k.slice(i + 1); };
+    const idOf = k => { const i = k.indexOf("_"); return i < 0 ? null : k.slice(0, i); };
+    const isDatasetKey = k => { const f = fieldOf(k); return f !== null && FIELDS.includes(f); };
+
+    // Determine which (single) dataset a query targets; reject multi-dataset queries.
+    function queryDatasetId(query) {
+      const ids = new Set();
+      const add = k => { if (k && isDatasetKey(k)) ids.add(idOf(k)); };
+      (function scan(f) {
+        if (!f || typeof f !== "object") return;
+        for (const op of Object.keys(f)) {
+          if (op === "AND" || op === "OR") (f[op] || []).forEach(scan);
+          else if (op === "NOT") scan(f[op]);
+          else add(Object.keys(f[op] || {})[0]);
+        }
+      })(query.WHERE && Object.keys(query.WHERE).length ? query.WHERE : null);
+      (query.OPTIONS && query.OPTIONS.COLUMNS || []).forEach(add);
+      const ord = query.OPTIONS && query.OPTIONS.ORDER;
+      if (typeof ord === "string") add(ord);
+      else if (ord && ord.keys) ord.keys.forEach(add);
+      const tr = query.TRANSFORMATIONS;
+      if (tr) {
+        (tr.GROUP || []).forEach(add);
+        (tr.APPLY || []).forEach(a => { const ak = Object.keys(a)[0]; const tok = Object.keys(a[ak])[0]; add(a[ak][tok]); });
+      }
+      if (ids.size === 0) throw new Error("Query does not reference any dataset field");
+      if (ids.size > 1) throw new Error("A query may reference only one dataset (found: " + [...ids].join(", ") + ")");
+      return [...ids][0];
+    }
+
+    // Deep-clone a query, re-prefixing every key of dataset `from` to dataset `to`.
+    function rewriteIds(node, from, to) {
+      if (typeof node === "string")
+        return (isDatasetKey(node) && idOf(node) === from) ? to + "_" + fieldOf(node) : node;
+      if (Array.isArray(node)) return node.map(n => rewriteIds(n, from, to));
+      if (node && typeof node === "object") {
+        const o = {};
+        for (const k of Object.keys(node)) {
+          const nk = (isDatasetKey(k) && idOf(k) === from) ? to + "_" + fieldOf(k) : k;
+          o[nk] = rewriteIds(node[k], from, to);
+        }
+        return o;
+      }
+      return node;
+    }
+
+    function matchIS(value, pattern) {
+      const star = pattern.indexOf("*");
+      if (star === -1) return value === pattern;
+      const pre = pattern.startsWith("*"), suf = pattern.endsWith("*");
+      const core = pattern.replace(/^\*/, "").replace(/\*$/, "");
+      if (core.indexOf("*") !== -1) throw new Error("Asterisk only allowed at start/end of IS string");
+      if (pre && suf) return String(value).includes(core);
+      if (suf) return String(value).startsWith(core);
+      if (pre) return String(value).endsWith(core);
+      return value === pattern;
+    }
+
+    function evalFilter(f, row) {
+      const keys = Object.keys(f);
+      if (keys.length === 0) return true;
+      if (keys.length !== 1) throw new Error("Each filter must have exactly one key");
+      const op = keys[0], body = f[op];
+      switch (op) {
+        case "AND":
+          if (!Array.isArray(body) || !body.length) throw new Error("AND needs a non-empty array");
+          return body.every(sub => evalFilter(sub, row));
+        case "OR":
+          if (!Array.isArray(body) || !body.length) throw new Error("OR needs a non-empty array");
+          return body.some(sub => evalFilter(sub, row));
+        case "NOT":
+          return !evalFilter(body, row);
+        case "GT": case "LT": case "EQ": {
+          const k = Object.keys(body)[0], f = fieldOf(k);
+          if (!f || !MFIELDS.includes(f)) throw new Error(op + " needs a numeric key like sections_avg");
+          const v = body[k];
+          if (typeof v !== "number") throw new Error(op + " value must be a number");
+          const cell = row[f];
+          return op === "GT" ? cell > v : op === "LT" ? cell < v : cell === v;
+        }
+        case "IS": {
+          const k = Object.keys(body)[0], f = fieldOf(k);
+          if (!f || !SFIELDS.includes(f)) throw new Error("IS needs a string key like sections_dept");
+          if (typeof body[k] !== "string") throw new Error("IS value must be a string");
+          return matchIS(row[f], body[k]);
+        }
+        default:
+          throw new Error("Unknown filter operator: " + op);
+      }
+    }
+
+    function applyToken(token, key, rows) {
+      const fld = fieldOf(key) || key;
+      if (token === "COUNT") return new Set(rows.map(r => r[fld])).size;
+      const nums = rows.map(r => r[fld]);
+      if (token === "MAX") return Math.max.apply(null, nums);
+      if (token === "MIN") return Math.min.apply(null, nums);
+      if (token === "SUM") return Math.round(nums.reduce((a, b) => a + b, 0) * 100) / 100;
+      if (token === "AVG") {
+        const total = nums.reduce((a, b) => a + b, 0);
+        return Math.round((total / nums.length) * 100) / 100;
+      }
+      throw new Error("Unknown APPLY token: " + token);
+    }
+
+    function transform(rows, tr) {
+      const groupKeys = tr.GROUP;
+      if (!Array.isArray(groupKeys) || !groupKeys.length) throw new Error("GROUP must be a non-empty array");
+      const apply = tr.APPLY || [];
+      const groups = new Map();
+      rows.forEach(r => {
+        const gk = groupKeys.map(k => r[fieldOf(k)]).join(" ");
+        if (!groups.has(gk)) groups.set(gk, []);
+        groups.get(gk).push(r);
+      });
+      const out = [];
+      groups.forEach(members => {
+        const rec = {};
+        groupKeys.forEach(k => (rec[k] = members[0][fieldOf(k)]));
+        apply.forEach(a => {
+          const applykey = Object.keys(a)[0];
+          const token = Object.keys(a[applykey])[0];
+          rec[applykey] = applyToken(token, a[applykey][token], members);
+        });
+        out.push(rec);
+      });
+      return out;
+    }
+
+    function performQuery(query) {
+      if (typeof query !== "object" || query === null) throw new Error("Query must be an object");
+      if (!("WHERE" in query)) throw new Error("Query missing WHERE");
+      if (!query.OPTIONS || !Array.isArray(query.OPTIONS.COLUMNS) || !query.OPTIONS.COLUMNS.length)
+        throw new Error("OPTIONS.COLUMNS must be a non-empty array");
+
+      const datasetId = queryDatasetId(query);
+      if (!loaded.has(datasetId)) throw new Error("Dataset '" + datasetId + "' is not loaded — add it in the Datasets panel.");
+      const rows = DATASETS[datasetId].rows.filter(r => evalFilter(query.WHERE, r));
+
+      let records;
+      if (query.TRANSFORMATIONS) {
+        records = transform(rows, query.TRANSFORMATIONS);
+      } else {
+        records = rows.map(r => {
+          const rec = {};
+          FIELDS.forEach(fn => (rec[datasetId + "_" + fn] = r[fn]));
+          return rec;
+        });
+      }
+
+      const cols = query.OPTIONS.COLUMNS;
+      const projected = records.map(rec => {
+        const o = {};
+        cols.forEach(c => {
+          if (!(c in rec)) throw new Error("COLUMNS references unknown key: " + c);
+          o[c] = rec[c];
+        });
+        return o;
+      });
+
+      const order = query.OPTIONS.ORDER;
+      if (order) {
+        let keys, dir = "UP";
+        if (typeof order === "string") keys = [order];
+        else { keys = order.keys; dir = order.dir || "UP"; }
+        if (!keys || !keys.every(k => cols.includes(k))) throw new Error("ORDER keys must appear in COLUMNS");
+        const sign = dir === "DOWN" ? -1 : 1;
+        projected.sort((a, b) => {
+          for (const k of keys) {
+            if (a[k] < b[k]) return -1 * sign;
+            if (a[k] > b[k]) return 1 * sign;
+          }
+          return 0;
+        });
+      }
+
+      if (projected.length > 5000) throw new Error("ResultTooLargeError: query returned too many results");
+      return { columns: cols, records: projected, datasetId: datasetId };
+    }
+
+    // index of the first text column (labels) and first numeric column (values)
+    function chartAxes(result) {
+      const cols = result.columns;
+      const labelIdx = cols.findIndex(c => result.records.some(r => typeof r[c] === "string"));
+      const valIdx = cols.findIndex(c => result.records.every(r => typeof r[c] === "number"));
+      return { labelIdx, valIdx };
+    }
+
+    function render(result, result2) {
+      const cols = result.columns;
+      let html = tableHTML(cols, result.records.map(rec => cols.map(c => rec[c])));
+
+      const ax = chartAxes(result);
+      if (ax.labelIdx < 0 || ax.valIdx < 0 || !result.records.length) { outEl.innerHTML = html; return; }
+      const labelCol = cols[ax.labelIdx], valCol = cols[ax.valIdx];
+
+      if (result2) {
+        // overlay: build two label→value maps aligned by the same column positions
+        const mapOf = res => {
+          const lc = res.columns[ax.labelIdx], vc = res.columns[ax.valIdx], m = {};
+          res.records.forEach(r => { m[String(r[lc])] = r[vc]; });
+          return m;
+        };
+        const a = { name: result.datasetId, map: mapOf(result) };
+        const b = { name: result2.datasetId, map: mapOf(result2) };
+        const cats = [];
+        Object.keys(a.map).forEach(c => cats.push(c));
+        Object.keys(b.map).forEach(c => { if (!cats.includes(c)) cats.push(c); });
+        const field = fieldOf(valCol) || valCol;
+        html += groupedChartHTML(field + " by " + (fieldOf(labelCol) || labelCol) +
+                  " — " + a.name + " vs " + b.name, cats, a, b);
+      } else {
+        const labels = result.records.map(r => String(r[labelCol]));
+        const values = result.records.map(r => r[valCol]);
+        html += chartHTML(valCol + " by " + labelCol, labels, values);
+      }
+      outEl.innerHTML = html;
+    }
+
+    function run() {
+      errEl.hidden = true;
+      let query;
+      try { query = JSON.parse(editor.value); }
+      catch (e) { errEl.hidden = false; errEl.textContent = "Invalid JSON: " + e.message; outEl.innerHTML = ""; return; }
+      try {
+        const result = performQuery(query);
+        const overlay = overlaySel.value;
+        let result2 = null;
+        if (overlay && overlay !== result.datasetId) {
+          if (!loaded.has(overlay)) throw new Error("Overlay dataset '" + overlay + "' is not loaded.");
+          result2 = performQuery(rewriteIds(query, result.datasetId, overlay));
+        }
+        render(result, result2);
+      }
+      catch (e) { errEl.hidden = false; errEl.textContent = e.message; outEl.innerHTML = ""; }
+    }
+
+    function loadPreset(p) {
+      editor.value = JSON.stringify(p.q, null, 2);
+      overlaySel.value = (p.overlay && loaded.has(p.overlay)) ? p.overlay : "";
+      run();
+    }
+
+    /* ---- Dataset management UI (add / remove / overlay) ---- */
+    function renderDatasets() {
+      const ids = Object.keys(DATASETS);
+      // chips for loaded datasets
+      chipsEl.innerHTML = "";
+      ids.filter(id => loaded.has(id)).forEach(id => {
+        const ds = DATASETS[id];
+        const chip = document.createElement("span");
+        chip.className = "ds-chip";
+        chip.innerHTML = '<strong>' + esc(id) + '</strong> <span class="ds-meta">' +
+          esc(ds.kind) + " · " + ds.rows.length + ' rows</span>';
+        const x = document.createElement("button");
+        x.type = "button"; x.title = "Remove " + id; x.setAttribute("aria-label", "Remove " + id);
+        x.textContent = "×";
+        x.addEventListener("click", () => removeDataset(id));
+        chip.appendChild(x);
+        chipsEl.appendChild(chip);
+      });
+      if (!loaded.size) chipsEl.innerHTML = '<span class="ds-empty">No datasets loaded — add one to run a query.</span>';
+
+      // add-select: datasets not yet loaded
+      addSel.innerHTML = '<option value="">+ Add sample…</option>';
+      ids.filter(id => !loaded.has(id)).forEach(id => {
+        const o = document.createElement("option");
+        o.value = id; o.textContent = DATASETS[id].label;
+        addSel.appendChild(o);
+      });
+
+      // overlay-select: loaded datasets (keep current choice if still valid)
+      const prev = overlaySel.value;
+      overlaySel.innerHTML = '<option value="">None</option>';
+      ids.filter(id => loaded.has(id)).forEach(id => {
+        const o = document.createElement("option");
+        o.value = id; o.textContent = id;
+        overlaySel.appendChild(o);
+      });
+      overlaySel.value = loaded.has(prev) ? prev : "";
+    }
+
+    function addDataset(id) {
+      if (!DATASETS[id] || loaded.has(id)) return;
+      loaded.add(id);
+      renderDatasets();
+    }
+    function removeDataset(id) {
+      loaded.delete(id);
+      renderDatasets();
+    }
+
+    function showMsg(text, isErr) {
+      msgEl.hidden = false;
+      msgEl.className = "ds-msg" + (isErr ? " err" : "");
+      msgEl.textContent = text;
+    }
+
+    // Parse an uploaded file into normalized section rows. Accepts a JSON array,
+    // an object with a `result` array (raw UBC format), or an object with `rows`.
+    function parseUpload(text) {
+      let data;
+      try { data = JSON.parse(text); } catch (e) { throw new Error("not valid JSON (" + e.message + ")"); }
+      let raw;
+      if (Array.isArray(data)) raw = data;
+      else if (data && Array.isArray(data.result)) raw = data.result;
+      else if (data && Array.isArray(data.rows)) raw = data.rows;
+      else throw new Error("expected a JSON array of sections, or an object with a 'result' array");
+      if (!raw.length) throw new Error("the file contains no rows");
+      const pick = (r, a, b) => (r[a] !== undefined && r[a] !== null) ? r[a] : r[b];
+      const num = v => { const n = Number(v); return isNaN(n) ? 0 : n; };
+      const str = v => (v === undefined || v === null) ? "" : String(v);
+      const rows = raw.map(r => ({
+        dept: str(pick(r, "dept", "Subject")).toLowerCase(),
+        id: str(pick(r, "id", "Course")),
+        avg: num(pick(r, "avg", "Avg")),
+        instructor: str(pick(r, "instructor", "Professor")),
+        title: str(pick(r, "title", "Title")),
+        pass: num(pick(r, "pass", "Pass")),
+        fail: num(pick(r, "fail", "Fail")),
+        audit: num(pick(r, "audit", "Audit")),
+        year: num(pick(r, "year", "Year")),
+        uuid: str(pick(r, "uuid", "id"))
+      }));
+      if (!rows.some(r => r.dept)) throw new Error("rows don't look like sections (need a dept/Subject and avg/Avg)");
+      return rows;
+    }
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const id = file.name.replace(/\.[^.]+$/, "").trim();
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          if (!id || id.indexOf("_") !== -1) throw new Error("dataset id (from the file name) must be non-empty and contain no underscore");
+          if (DATASETS[id]) throw new Error("a dataset with id '" + id + "' already exists");
+          const rows = parseUpload(String(reader.result));
+          DATASETS[id] = { id: id, kind: "sections", label: id + " — uploaded (" + rows.length + " rows)", rows: rows };
+          loaded.add(id);
+          renderDatasets();
+          showMsg("Added '" + id + "' (" + rows.length + " rows) — query it with " + id + "_avg, " + id + "_dept, etc.", false);
+        } catch (e) {
+          showMsg("Upload failed: " + e.message, true);
+        }
+        fileInput.value = "";
+      };
+      reader.onerror = () => { showMsg("Could not read the file.", true); fileInput.value = ""; };
+      reader.readAsText(file);
+    });
+
+    const presetWrap = document.getElementById("insightPresets");
+    PRESETS.forEach(p => {
+      const b = document.createElement("button");
+      b.textContent = p.label;
+      b.addEventListener("click", () => loadPreset(p));
+      presetWrap.appendChild(b);
+    });
+    document.getElementById("insightRun").addEventListener("click", run);
+    document.getElementById("insightFormat").addEventListener("click", () => {
+      try { editor.value = JSON.stringify(JSON.parse(editor.value), null, 2); errEl.hidden = true; }
+      catch (e) { errEl.hidden = false; errEl.textContent = "Invalid JSON: " + e.message; }
+    });
+    addSel.addEventListener("change", () => { if (addSel.value) { addDataset(addSel.value); addSel.value = ""; } });
+    overlaySel.addEventListener("change", run);
+
+    function start() { renderDatasets(); loadPreset(PRESETS[0]); }
+    return { start };
+  })();
+
+  /* Documentation toggle */
+  const docsBtn = document.getElementById("insightDocsBtn");
+  const docs = document.getElementById("insightDocs");
+  function setDocs(show) {
+    docs.hidden = !show;
+    docsBtn.textContent = show ? "Hide reference" : "Query reference";
+    docsBtn.setAttribute("aria-expanded", String(show));
+  }
+  docsBtn.addEventListener("click", () => setDocs(docs.hidden));
+
+  Insight.start();
+
+  // Open documentation automatically when linked with #docs
+  if (location.hash === "#docs") { setDocs(true); docs.scrollIntoView({ behavior: "smooth" }); }
+})();
+</script>
+
+</body>
+</html>

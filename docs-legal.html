@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Legal Mediation Database — Planning &amp; Documentation · Xavier Del Rosario</title>
+<meta name="description" content="Planning and documentation for the Legal Mediation Database — milestones, ER diagram, normalization, and SQL/web implementation." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
+  })();
+</script>
+<style>
+  :root {
+    --bg: #0b0f17; --bg-soft: #121826; --card: #161d2c; --card-hover: #1c2436;
+    --border: #243049; --text: #e6ebf5; --muted: #97a3bd; --accent: #8fbaff;
+    --shadow: 0 18px 40px -22px rgba(0,0,0,.8); --nav-bg: rgba(11,15,23,.72);
+  }
+  html[data-theme="light"] {
+    --bg: #f5f8fd; --bg-soft: #ffffff; --card: #ffffff; --card-hover: #eef3fb;
+    --border: #d8e1ef; --text: #1a2333; --muted: #58647c; --accent: #5b8def;
+    --shadow: 0 18px 40px -26px rgba(40,60,110,.4); --nav-bg: rgba(255,255,255,.8);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; transition: background .3s; }
+  body {
+    margin: 0; font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+    transition: background .3s, color .3s;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(900px, 92vw); margin: 0 auto; }
+
+  nav {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(12px);
+    background: var(--nav-bg); border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
+  .nav-inner .wrap { width: 100%; }
+  .brand { font-weight: 800; letter-spacing: .3px; color: var(--accent); }
+  .back { color: var(--muted); font-size: 14px; font-weight: 600; transition: color .2s; }
+  .back:hover { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 10px; cursor: pointer;
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    transition: border-color .2s, transform .12s;
+  }
+  .theme-toggle:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .moon { display: none; }
+  html[data-theme="light"] .theme-toggle .moon { display: block; }
+  html[data-theme="light"] .theme-toggle .sun { display: none; }
+
+  header.page { padding: 46px 0 8px; }
+  header.page .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); letter-spacing: .5px; }
+  header.page h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); margin: 6px 0 8px; letter-spacing: -1px; }
+  header.page p { color: var(--muted); margin: 0; max-width: 680px; }
+  main { padding: 26px 0 50px; }
+
+  .proj { border: 1px solid var(--border); border-radius: 16px; background: var(--card); padding: 26px 28px; box-shadow: var(--shadow); }
+  .proj h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 4px 0 10px; }
+  .proj h3:not(:first-child) { margin-top: 18px; }
+
+  .steps { display: grid; gap: 10px; margin: 0 0 8px; }
+  .step { display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: start; }
+  .step .m { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); padding-top: 1px; }
+  .step .d { color: var(--muted); font-size: 14px; }
+  .step .d strong { color: var(--text); font-weight: 600; }
+  @media (max-width: 560px) { .step { grid-template-columns: 1fr; gap: 2px; } }
+
+  figure { margin: 16px 0 4px; }
+  figure a { display: block; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-soft); }
+  figcaption { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+  .lnk {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600;
+    padding: 8px 15px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--bg-soft); color: var(--text); transition: border-color .2s, transform .12s;
+  }
+  .lnk:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+  footer { padding: 30px 0 50px; text-align: center; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="back" href="index.html">← Back to portfolio</a>
+    <div class="nav-right">
+      <div class="brand">Xavier Del Rosario</div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle theme">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="page">
+  <div class="wrap">
+    <div class="eyebrow">UBC CPSC 304 · Iterative database design</div>
+    <h1>Legal Mediation Database</h1>
+    <p>Planning &amp; documentation — a relational database for a family-law mediation practice, designed across four milestones from concept to a working web app.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <article class="proj">
+      <h3>Milestones</h3>
+      <div class="steps">
+        <div class="step"><div class="m">Milestone 1</div><div class="d"><strong>Proposal &amp; requirements</strong> — domain description, the data to capture, and the entities and relationships to model.</div></div>
+        <div class="step"><div class="m">Milestone 2</div><div class="d"><strong>Conceptual design</strong> — an Entity-Relationship (ER) diagram of clients, case files, relationships, assets, debts, and billing.</div></div>
+        <div class="step"><div class="m">Milestone 3</div><div class="d"><strong>Logical design</strong> — translated the ER model to a relational schema and applied <strong>normalization</strong> (functional dependencies → BCNF/3NF) to remove redundancy.</div></div>
+        <div class="step"><div class="m">Milestone 4</div><div class="d"><strong>Implementation</strong> — SQL schema and data, a PHP web interface, and a documented query list (selection, projection, join, aggregation, division).</div></div>
+      </div>
+
+      <h3>Entity-Relationship diagram</h3>
+      <figure>
+        <a href="assets/legal-er-diagram.png" target="_blank" rel="noopener"><img src="assets/legal-er-diagram.png" alt="Entity-Relationship diagram of the legal mediation database" loading="lazy" /></a>
+        <figcaption>Final ER diagram — clients, case files, relationships, assets, debts, and billing (click to open full size).</figcaption>
+      </figure>
+
+      <div class="links">
+        <a class="lnk" href="legal.html">▸ Live demo</a>
+        <a class="lnk" href="https://github.com/XavierGDelrosario/Legal-Database" target="_blank" rel="noopener">Repository ↗</a>
+        <a class="lnk" href="https://drive.google.com/drive/folders/1OASoYQgNZwOQNLcW5_7cMx2P1TxgmBJl" target="_blank" rel="noopener">Demo videos ↗</a>
+      </div>
+    </article>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">Computer Science · University of British Columbia · Built with plain HTML, CSS &amp; JavaScript</div>
+</footer>
+
+<script>
+  const themeBtn = document.getElementById("themeToggle");
+  themeBtn.addEventListener("click", function () {
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
+    const next = isLight ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+</script>
+
+</body>
+</html>
