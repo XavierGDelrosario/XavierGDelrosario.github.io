@@ -107,6 +107,29 @@
   .bar-fill { height: 100%; background: var(--accent); border-radius: 5px 0 0 5px; min-width: 2px; transition: width .5s ease; }
   .bar-val { position: absolute; right: 8px; top: 0; line-height: 24px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text); }
   .demo-err { color: #d63b3b; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; margin-top: 12px; }
+  .demo-ok { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; margin-top: 12px; }
+
+  .section-head { font-size: clamp(1.15rem, 3vw, 1.45rem); margin: 0 0 6px; letter-spacing: -.4px; }
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 46px 0 30px; }
+  .legal-controls input[type="text"] {
+    width: 100%; font-family: inherit; font-size: 14px; padding: 10px 13px;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--text);
+  }
+  .field-row { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+  .add-client { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+  .add-client input[type="text"], .add-client select {
+    font-family: inherit; font-size: 14px; padding: 10px 13px;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--text);
+  }
+  .add-client input[type="text"] { flex: 1 1 200px; }
+  .add-client input:focus, .add-client select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .add-client button {
+    font-family: inherit; font-weight: 600; font-size: 13.5px; cursor: pointer; white-space: nowrap;
+    padding: 10px 18px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); transition: border-color .2s, transform .12s;
+  }
+  .add-client button:hover { border-color: var(--accent); transform: translateY(-1px); }
 
   footer { padding: 30px 0 50px; text-align: center; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px; }
 </style>
@@ -135,7 +158,42 @@
 
 <main>
   <div class="wrap">
-    <p class="demo-intro">Choose a query — each runs the same relational logic as the PHP application: selection, projection, joins, aggregation, and a division query.</p>
+    <h2 class="section-head">Manage a client</h2>
+    <p class="demo-intro">Add a new client, or pick an existing one to edit their contact information or their mediation relationships with other clients — the same insert / update / delete operations the PHP admin pages perform, kept consistent across the linked tables.</p>
+    <div class="add-client">
+      <input type="text" id="newClientName" placeholder="New client name (e.g. Grace Kim)" />
+      <select id="newClientSource">
+        <option value="Website">Website</option>
+        <option value="Lawyer Referral">Lawyer Referral</option>
+        <option value="Friend">Friend</option>
+      </select>
+      <button class="accent" id="addClientBtn">+ Add client</button>
+    </div>
+    <div class="legal-controls">
+      <div class="field-row">
+        <div><label for="clClient">Client</label><select id="clClient"></select></div>
+        <div><label for="clTarget">Manage</label><select id="clTarget">
+          <option value="contact">Contact information</option>
+          <option value="relationship">Relationships with other clients</option>
+        </select></div>
+      </div>
+      <div id="clDetail"></div>
+      <div class="field-row">
+        <div><label for="clOp">Action</label><select id="clOp"></select></div>
+        <div id="clFields"></div>
+      </div>
+    </div>
+    <div class="sql-box" id="clientSql"></div>
+    <div class="demo-controls">
+      <button class="accent" id="clientApply">Apply change</button>
+    </div>
+    <div id="clientError" class="demo-err" hidden></div>
+    <div id="clientMsg" class="demo-ok" hidden></div>
+
+    <hr class="section-divider" />
+
+    <h2 class="section-head">Query the database</h2>
+    <p class="demo-intro">Choose a query — each runs the same relational logic as the PHP application: selection, projection, joins, aggregation, and a division query. Clients you add or remove above appear here too.</p>
     <div class="legal-controls">
       <div>
         <label for="legalQuery">Query</label>
@@ -248,6 +306,21 @@
     ];
     const OwnsAssets = [
       { AssetID: "A1", ID: 1 }, { AssetID: "A2", ID: 1 }, { AssetID: "A3", ID: 3 }, { AssetID: "A4", ID: 5 }
+    ];
+    /* Contact info (ContactInformation + ContactsPerson, flattened for the demo) */
+    const Contacts = [
+      { ContactID: 1, ID: 1, ContactType: "Phone",   ContactData: "604-555-0101" },
+      { ContactID: 2, ID: 1, ContactType: "Email",   ContactData: "alice@example.com" },
+      { ContactID: 3, ID: 2, ContactType: "Phone",   ContactData: "604-555-0102" },
+      { ContactID: 4, ID: 3, ContactType: "Email",   ContactData: "carla@example.com" },
+      { ContactID: 5, ID: 4, ContactType: "Phone",   ContactData: "778-555-0144" },
+      { ContactID: 6, ID: 5, ContactType: "Address", ContactData: "12 Oak St, Vancouver" }
+    ];
+    /* Mediation relationships between participating parties (MediatesWith) */
+    const MediatesWith = [
+      { Primary_ID: 1, Secondary_ID: 2 },
+      { Primary_ID: 3, Secondary_ID: 4 },
+      { Primary_ID: 5, Secondary_ID: 6 }
     ];
 
     const round2 = n => Math.round(n * 100) / 100;
@@ -430,7 +503,235 @@
     sel.addEventListener("change", () => { buildParam(); refreshSQL(); outEl.innerHTML = ""; errEl.hidden = true; });
     document.getElementById("legalRun").addEventListener("click", run);
 
-    function start() { sel.value = "0"; buildParam(); refreshSQL(); run(); }
+    /* ============================================================
+       CLIENT MANAGEMENT — contact info & relationships
+       (INSERT / UPDATE / DELETE on the shared in-memory tables)
+       ============================================================ */
+    const CONTACT_TYPES = ["Phone", "Email", "Address", "Fax"];
+    const clClient = document.getElementById("clClient");
+    const clTarget = document.getElementById("clTarget");
+    const clOp = document.getElementById("clOp");
+    const clFields = document.getElementById("clFields");
+    const clDetail = document.getElementById("clDetail");
+    const cSqlEl = document.getElementById("clientSql");
+    const cErrEl = document.getElementById("clientError");
+    const cMsgEl = document.getElementById("clientMsg");
+
+    function highlightWrite(sql) {
+      const kw = /\b(INSERT INTO|VALUES|UPDATE|SET|DELETE FROM|WHERE|AND|OR)\b/g;
+      return esc(sql).replace(kw, '<span class="kw">$1</span>');
+    }
+    function nameOf(id) { const p = Person.find(x => x.ID === id); return p ? p.PersonName : "?"; }
+    function val(id) { const el = document.getElementById(id); return el ? el.value : ""; }
+    function curClient() { return parseInt(clClient.value, 10); }
+    function contactsOf(id) { return Contacts.filter(c => c.ID === id); }
+    function relsOf(id) {
+      return MediatesWith
+        .map(m => (m.Primary_ID === id ? m.Secondary_ID : (m.Secondary_ID === id ? m.Primary_ID : null)))
+        .filter(x => x !== null);
+    }
+    function nextContactID() { return Contacts.reduce((m, c) => Math.max(m, c.ContactID), 0) + 1; }
+    function spliceWhere(arr, pred) {
+      let n = 0;
+      for (let i = arr.length - 1; i >= 0; i--) { if (pred(arr[i])) { arr.splice(i, 1); n++; } }
+      return n;
+    }
+
+    function fillClientSelect() {
+      const cur = clClient.value;
+      clClient.innerHTML = ParticipatingParty
+        .map(pp => '<option value="' + pp.ID + '">' + esc(nameOf(pp.ID)) + " (ID " + pp.ID + ")</option>")
+        .join("");
+      if (cur && ParticipatingParty.some(p => String(p.ID) === cur)) clClient.value = cur;
+    }
+    function renderDetail() {
+      const id = curClient();
+      if (clTarget.value === "contact") {
+        const rows = contactsOf(id).map(c => [c.ContactID, c.ContactType, c.ContactData]);
+        clDetail.innerHTML = tableHTML(["ContactID", "Type", "Data"], rows);
+      } else {
+        const rows = relsOf(id).map(o => [o, nameOf(o)]);
+        clDetail.innerHTML = tableHTML(["ID", "Mediates with"], rows);
+      }
+    }
+    function typeOptions(selected) {
+      return CONTACT_TYPES.map(t => '<option value="' + t + '"' + (t === selected ? " selected" : "") + ">" + t + "</option>").join("");
+    }
+    function contactOptions(id) {
+      return contactsOf(id).map(c => '<option value="' + c.ContactID + '">' + esc(c.ContactType + ": " + c.ContactData) + "</option>").join("");
+    }
+    function otherClientOptions(id, onlyRelated) {
+      const ids = onlyRelated
+        ? relsOf(id)
+        : ParticipatingParty.map(p => p.ID).filter(x => x !== id && relsOf(id).indexOf(x) === -1);
+      return ids.map(x => '<option value="' + x + '">' + esc(nameOf(x)) + " (ID " + x + ")</option>").join("");
+    }
+
+    function buildOps() {
+      const opts = clTarget.value === "contact"
+        ? [["add", "Add contact"], ["update", "Update contact"], ["remove", "Remove contact"]]
+        : [["add", "Add relationship"], ["remove", "Remove relationship"]];
+      clOp.innerHTML = opts.map(o => '<option value="' + o[0] + '">' + o[1] + "</option>").join("");
+    }
+    function buildFields() {
+      cMsgEl.hidden = true; cErrEl.hidden = true;
+      const id = curClient();
+      const target = clTarget.value, op = clOp.value;
+      if (target === "contact") {
+        if (op === "add") {
+          clFields.innerHTML =
+            '<div class="field-row">' +
+              '<div><label for="fType">Type</label><select id="fType">' + typeOptions("Phone") + "</select></div>" +
+              '<div><label for="fData">Value</label><input type="text" id="fData" placeholder="e.g. 604-555-0199"></div>' +
+            "</div>";
+        } else if (op === "update") {
+          clFields.innerHTML =
+            '<div><label for="fContact">Contact</label><select id="fContact">' + contactOptions(id) + "</select></div>" +
+            '<div class="field-row" style="margin-top:14px">' +
+              '<div><label for="fType">Type</label><select id="fType">' + typeOptions() + "</select></div>" +
+              '<div><label for="fData">Value</label><input type="text" id="fData"></div>' +
+            "</div>";
+          syncContact();
+          const fc = document.getElementById("fContact");
+          if (fc) fc.addEventListener("change", () => { syncContact(); refreshWriteSQL(); });
+        } else {
+          clFields.innerHTML = '<div><label for="fContact">Contact to remove</label><select id="fContact">' + contactOptions(id) + "</select></div>";
+        }
+      } else {
+        const lbl = op === "add" ? "Mediating client" : "Relationship to remove";
+        clFields.innerHTML = '<div><label for="fOther">' + lbl + '</label><select id="fOther">' + otherClientOptions(id, op === "remove") + "</select></div>";
+      }
+      ["fType", "fData", "fContact", "fOther"].forEach(fid => {
+        const el = document.getElementById(fid);
+        if (el) el.addEventListener(el.tagName === "SELECT" ? "change" : "input", refreshWriteSQL);
+      });
+      refreshWriteSQL();
+    }
+    function syncContact() {
+      const cid = parseInt(val("fContact"), 10);
+      const c = Contacts.find(x => x.ContactID === cid);
+      if (c) { document.getElementById("fType").value = c.ContactType; document.getElementById("fData").value = c.ContactData; }
+    }
+    function refreshWriteSQL() {
+      const id = curClient();
+      const target = clTarget.value, op = clOp.value;
+      let sql = "";
+      if (target === "contact") {
+        if (op === "add") {
+          const cid = nextContactID();
+          const data = (val("fData") || "").trim() || "<value>";
+          sql =
+            "INSERT INTO ContactInformation (ContactID, ContactType, ContactData)\n" +
+            "VALUES (" + cid + ", '" + val("fType") + "', '" + data + "');\n" +
+            "INSERT INTO ContactsPerson (ID, ContactID)\n" +
+            "VALUES (" + id + ", " + cid + ");";
+        } else if (op === "update") {
+          const cid = parseInt(val("fContact"), 10) || 0;
+          const data = (val("fData") || "").trim() || "<value>";
+          sql =
+            "UPDATE ContactInformation\n" +
+            "SET    ContactType = '" + val("fType") + "', ContactData = '" + data + "'\n" +
+            "WHERE  ContactID = " + cid + ";";
+        } else {
+          const cid = parseInt(val("fContact"), 10) || 0;
+          sql =
+            "DELETE FROM ContactsPerson     WHERE ID = " + id + " AND ContactID = " + cid + ";\n" +
+            "DELETE FROM ContactInformation WHERE ContactID = " + cid + ";";
+        }
+      } else {
+        const other = parseInt(val("fOther"), 10) || 0;
+        if (op === "add") {
+          sql =
+            "INSERT INTO MediatesWith (Primary_ID, Secondary_ID)\n" +
+            "VALUES (" + id + ", " + other + ");";
+        } else {
+          sql =
+            "DELETE FROM MediatesWith\n" +
+            "WHERE  (Primary_ID = " + id + " AND Secondary_ID = " + other + ")\n" +
+            "   OR  (Primary_ID = " + other + " AND Secondary_ID = " + id + ");";
+        }
+      }
+      cSqlEl.innerHTML = highlightWrite(sql);
+    }
+    function applyClient() {
+      cErrEl.hidden = true; cMsgEl.hidden = true;
+      const id = curClient();
+      const target = clTarget.value, op = clOp.value;
+      try {
+        if (Number.isNaN(id)) throw new Error("Select a client.");
+        if (target === "contact") {
+          if (op === "add") {
+            const data = (val("fData") || "").trim();
+            if (!data) throw new Error("Contact value is required.");
+            const cid = nextContactID();
+            Contacts.push({ ContactID: cid, ID: id, ContactType: val("fType"), ContactData: data });
+            showMsg("Added " + val("fType") + " contact for " + nameOf(id) + ".");
+          } else if (op === "update") {
+            const cid = parseInt(val("fContact"), 10);
+            const c = Contacts.find(x => x.ContactID === cid);
+            if (!c) throw new Error("Select a contact to update.");
+            const data = (val("fData") || "").trim();
+            if (!data) throw new Error("Contact value is required.");
+            c.ContactType = val("fType"); c.ContactData = data;
+            showMsg("Updated contact #" + cid + " for " + nameOf(id) + ".");
+          } else {
+            const cid = parseInt(val("fContact"), 10);
+            if (!Contacts.some(x => x.ContactID === cid)) throw new Error("Select a contact to remove.");
+            spliceWhere(Contacts, x => x.ContactID === cid);
+            showMsg("Removed contact #" + cid + " from " + nameOf(id) + ".");
+          }
+        } else {
+          const other = parseInt(val("fOther"), 10);
+          if (Number.isNaN(other)) throw new Error(op === "add" ? "No other client available to relate." : "Select a relationship to remove.");
+          if (op === "add") {
+            if (relsOf(id).indexOf(other) !== -1) throw new Error("That relationship already exists.");
+            MediatesWith.push({ Primary_ID: id, Secondary_ID: other });
+            showMsg(nameOf(id) + " now mediates with " + nameOf(other) + ".");
+          } else {
+            const n = spliceWhere(MediatesWith, m =>
+              (m.Primary_ID === id && m.Secondary_ID === other) || (m.Primary_ID === other && m.Secondary_ID === id));
+            if (!n) throw new Error("Relationship not found.");
+            showMsg("Removed relationship between " + nameOf(id) + " and " + nameOf(other) + ".");
+          }
+        }
+        renderDetail();
+        buildFields();
+      } catch (e) {
+        cErrEl.hidden = false; cErrEl.textContent = e.message;
+      }
+    }
+    function showMsg(t) { cMsgEl.hidden = false; cMsgEl.textContent = "✓ " + t; }
+
+    /* Add a brand-new client (Person + ParticipatingParty) */
+    const newName = document.getElementById("newClientName");
+    const newSource = document.getElementById("newClientSource");
+    function nextPersonID() { return Person.reduce((m, p) => Math.max(m, p.ID), 0) + 1; }
+    function addClient() {
+      cErrEl.hidden = true; cMsgEl.hidden = true;
+      const name = (newName.value || "").trim();
+      if (!name) { cErrEl.hidden = false; cErrEl.textContent = "Enter a name for the new client."; return; }
+      const id = nextPersonID();
+      Person.push({ ID: id, PersonName: name });
+      ParticipatingParty.push({ ID: id, ReferredSource: newSource.value });
+      newName.value = "";
+      fillClientSelect();
+      clClient.value = String(id);
+      buildParam(); refreshSQL();
+      renderDetail(); buildFields();
+      showMsg("Added client " + name + " (ID " + id + "). They now appear in the selector and the queries below.");
+    }
+    document.getElementById("addClientBtn").addEventListener("click", addClient);
+    newName.addEventListener("keydown", e => { if (e.key === "Enter") addClient(); });
+
+    clClient.addEventListener("change", () => { renderDetail(); buildFields(); });
+    clTarget.addEventListener("change", () => { buildOps(); renderDetail(); buildFields(); });
+    clOp.addEventListener("change", buildFields);
+    document.getElementById("clientApply").addEventListener("click", applyClient);
+
+    function start() {
+      sel.value = "0"; buildParam(); refreshSQL(); run();
+      fillClientSelect(); buildOps(); renderDetail(); buildFields();
+    }
     return { start };
   })();
 
