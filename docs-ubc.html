@@ -72,6 +72,9 @@
   .proj li { margin-bottom: 7px; }
   .proj li strong { color: var(--text); font-weight: 600; }
   .proj code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--bg-soft); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--border); color: var(--text); }
+  .proj pre { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.55; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; overflow-x: auto; color: var(--text); margin: 4px 0 10px; }
+  .proj pre .c { color: var(--accent); }
+  .proj p.note { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
 
   .links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
   .lnk {
@@ -103,30 +106,69 @@
   <div class="wrap">
     <div class="eyebrow">UBC CPSC 310 · Agile / Scrum workflow</div>
     <h1>UBC Course Query</h1>
-    <p>Planning &amp; documentation — a full-stack query engine built in iterative sprints, with the API contract and query grammar designed up front.</p>
+    <p>Documentation for a full-stack query engine over UBC course and room data — the dataset model, the JSON query language, the API contract, and the agile process behind it.</p>
   </div>
 </header>
 
 <main>
   <div class="wrap">
     <article class="proj">
+      <h3>Overview</h3>
+      <ul>
+        <li>A web application that ingests <strong>UBC course datasets</strong>, stores them, and answers structured queries over them — returning results as JSON and as <strong>interactive bar charts</strong>.</li>
+        <li>Datasets are uploaded as zip archives, parsed into an internal model, and <strong>persisted to disk</strong> so they survive restarts and can be re-loaded into memory to answer queries.</li>
+        <li>Exposed both as a programmatic <code>InsightFacade</code> API and over <strong>RESTful HTTPS endpoints</strong>.</li>
+      </ul>
+
+      <h3>Datasets</h3>
+      <ul>
+        <li>Two kinds are supported: <code>sections</code> (course sections — department, id, average, instructor, etc.) and <code>rooms</code> (building and room metadata).</li>
+        <li>Each dataset has a unique <strong>id</strong>. An id is rejected if it contains an underscore or is only whitespace (it must match <code>/^[^_]+$/</code>), or if it duplicates an existing id.</li>
+        <li>Content is supplied as a <strong>base64-encoded zip</strong>; rows are counted and reported back via <code>listDatasets()</code>.</li>
+      </ul>
+
+      <h3>Query language</h3>
+      <p class="note">Queries are plain JSON. A <code>WHERE</code> block selects rows; an <code>OPTIONS</code> block chooses columns and ordering. Below: <em>departments and averages for sections with an average above 97, sorted ascending.</em></p>
+      <pre><span class="c">// SELECT dept, avg WHERE avg &gt; 97</span>
+{
+  "WHERE":   { "GT": { "sections_avg": 97 } },
+  "OPTIONS": {
+    "COLUMNS": [ "sections_dept", "sections_avg" ],
+    "ORDER":   "sections_avg"
+  }
+}</pre>
+      <ul>
+        <li><strong>Filters</strong> — numeric comparisons <code>GT</code> / <code>LT</code> / <code>EQ</code>, string matching <code>IS</code> (with <code>*</code> wildcards), and logic <code>AND</code> / <code>OR</code> / <code>NOT</code>, nestable to any depth.</li>
+        <li><strong>Aggregation</strong> — group rows and apply <code>MAX</code> / <code>MIN</code> / <code>AVG</code> / <code>SUM</code> / <code>COUNT</code> to a field.</li>
+        <li><strong>Sorting</strong> — stable ordering on one or more columns, ascending or descending.</li>
+        <li>A malformed query, or one referencing a dataset that wasn't added, is rejected with an <code>InsightError</code>; a query returning too many rows is rejected with a <code>ResultTooLargeError</code>.</li>
+      </ul>
+
+      <h3>API surface</h3>
+      <ul>
+        <li><code>addDataset(id, content, kind)</code> → resolves to the ids of all currently added datasets.</li>
+        <li><code>removeDataset(id)</code> → resolves to the removed id, or rejects with <code>NotFoundError</code> if it was never added.</li>
+        <li><code>performQuery(query)</code> → resolves to an array of result rows.</li>
+        <li><code>listDatasets()</code> → resolves to each dataset's id, kind, and row count.</li>
+      </ul>
+
+      <h3>Tech stack</h3>
+      <ul>
+        <li><strong>Backend</strong> — Node.js with an Express HTTPS server; datasets persisted to disk as JSON.</li>
+        <li><strong>Language &amp; tooling</strong> — TypeScript, with ESLint and Prettier enforced on every build.</li>
+        <li><strong>Testing</strong> — Mocha + Chai, including <code>chai-http</code> tests that exercise full request–response cycles against the live endpoints.</li>
+      </ul>
+
       <h3>How it was planned</h3>
       <ul>
         <li>Tracked work as <strong>GitHub Issues</strong> using a structured <strong>User Story</strong> template — each story captured a Role / Goal / Benefit, a <strong>Definition of Done</strong>, a breakdown of engineering tasks, and a time estimate.</li>
-        <li>Defined the <strong>query grammar</strong> (an EBNF-style JSON format) and the <strong>RESTful API</strong> contract before implementation, so the frontend and backend could be built against an agreed interface.</li>
+        <li>Defined the <strong>query grammar</strong> and the <strong>RESTful API</strong> contract before implementation, so the frontend and backend could be built against an agreed interface.</li>
         <li>Test-first: query behaviours were validated with a Mocha/Chai suite mirroring the spec.</li>
       </ul>
 
-      <h3>User-story template</h3>
-      <ul>
-        <li><strong>Summary</strong> — Role / Goal / Benefit</li>
-        <li><strong>Definition of done</strong> — concrete, testable acceptance criteria</li>
-        <li><strong>Engineering tasks</strong> — the steps to build and validate it</li>
-        <li><strong>Time estimate</strong> — hours and due date</li>
-      </ul>
-
       <div class="links">
-        <a class="lnk" href="insight.html">▸ Live demo &amp; query reference</a>
+        <a class="lnk" href="insight.html">▸ Run a live query</a>
+        <a class="lnk" href="https://youtu.be/CcUelxzeaOQ" target="_blank" rel="noopener">Watch demo ↗</a>
         <a class="lnk" href="https://github.com/XavierGDelrosario/UBC-Insight" target="_blank" rel="noopener">Repository ↗</a>
       </div>
     </article>
