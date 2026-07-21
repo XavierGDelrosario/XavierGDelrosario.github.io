@@ -375,7 +375,7 @@
           <h3>Languages</h3>
           <div class="chips">
             <span class="chip">Java</span><span class="chip">TypeScript</span><span class="chip">JavaScript</span>
-            <span class="chip">SQL / PL-pgSQL</span><span class="chip">Python</span><span class="chip">C</span><span class="chip">C++</span>
+            <span class="chip">SQL / PL-pgSQL</span><span class="chip">Python</span><span class="chip">Swift</span><span class="chip">C</span><span class="chip">C++</span>
             <span class="chip">C#</span><span class="chip">PHP</span><span class="chip">Bash</span><span class="chip">HTML</span>
           </div>
         </div>
@@ -384,7 +384,7 @@
           <div class="chips">
             <span class="chip">React</span><span class="chip">Vite</span><span class="chip">Node.js</span>
             <span class="chip">Deno</span><span class="chip">Supabase</span><span class="chip">PostgreSQL</span>
-            <span class="chip">Capacitor</span>
+            <span class="chip">pgvector</span><span class="chip">Capacitor</span>
           </div>
         </div>
         <div class="skill-card">
@@ -423,13 +423,13 @@
               <span class="p-date">Jun 2026 – Present</span>
             </div>
             <div class="p-role">Full-Stack Web &amp; iOS App · Language Learning</div>
-            <p>A Japanese ↔ English vocabulary app that turns any pasted text — subtitles, an article, a transcript — into a word-by-word reader and a spaced-repetition quiz. The interesting engineering is under the UI: a forgetting-curve scheduler tuned against measured data, a self-healing dictionary cache, and authorization enforced in the database rather than the client.</p>
+            <p>A Japanese ↔ English vocabulary app that turns any pasted text — subtitles, an article, a transcript — into a color-coded word-by-word reader and a spaced-repetition quiz, then reads the topic to suggest related vocabulary at your level. Built solo in 37 days, from empty repo to deployed production app.</p>
             <ul>
-              <li>Runs morphological analysis (kuromoji) in the browser to turn a pasted sentence into a word-by-word reader, coloring each word by how well you know it and resolving inflections back to their dictionary form (行った → 行く).</li>
-              <li>Self-hosts a 217k-entry JMdict + Japanese WordNet dictionary in Postgres as the primary source, demoting paid Google Cloud Translation to a metered fallback for cache misses and whole-sentence glosses only.</li>
-              <li>Makes cost overrun structurally impossible — an atomic, advisory-locked reserve-before-call quota, on-by-default per-user and global caps, and a kill switch that disables all paid calls with no redeploy.</li>
-              <li>Implements a forgetting-curve spaced-repetition scheduler (R = e^−Δt/S) in Postgres over an append-only review log, and fixed three production scheduling bugs by measuring the model against real review data.</li>
-              <li>Enforces authorization in the database — row-level security, SECURITY DEFINER guards, a client-read-only dictionary — proven by 45 live-Postgres integration tests asserting exact SQLSTATEs.</li>
+              <li>Runs morphological analysis (kuromoji) in the browser to color-code a pasted sentence word-by-word by how well you know it, resolving inflections to their dictionary form (行った → 行く).</li>
+              <li>Self-hosts a 217k-entry JMdict + WordNet dictionary in Postgres, demoting paid Google Translation to a cache-miss fallback — with atomic quota reservation, always-on global caps, and a kill switch that make overspend structurally impossible.</li>
+              <li>Builds the differentiator on Postgres pgvector: ~41k embedded entries expanded into topic-related vocabulary, ranked by domain centrality and filtered to the user's calibrated level.</li>
+              <li>Runs a spaced-repetition scheduler on a measured forgetting curve in Postgres; three scheduling bugs found and fixed by measuring the model against real recall data.</li>
+              <li>Enforces authorization in the database (RLS, SECURITY DEFINER guards, an append-only review log), proven across ~700 tests in 5 layers; live on web and native iOS.</li>
             </ul>
             <div class="tags">
               <span class="tag">TypeScript</span><span class="tag">React</span><span class="tag">Vite</span>
