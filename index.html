@@ -155,7 +155,7 @@
   .fact .v { font-weight: 600; margin-top: 3px; }
 
   /* Skills */
-  .skill-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .skill-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; }
   @media (max-width: 760px) { .skill-cols { grid-template-columns: 1fr; } }
   .skill-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
   .skill-card h3 { margin: 0 0 14px; font-size: 1.05rem; }
@@ -375,22 +375,32 @@
           <h3>Languages</h3>
           <div class="chips">
             <span class="chip">Java</span><span class="chip">TypeScript</span><span class="chip">JavaScript</span>
-            <span class="chip">Python</span><span class="chip">C</span><span class="chip">C++</span>
-            <span class="chip">C#</span><span class="chip">PHP</span><span class="chip">SQL</span><span class="chip">HTML</span>
+            <span class="chip">SQL / PL-pgSQL</span><span class="chip">Python</span><span class="chip">C</span><span class="chip">C++</span>
+            <span class="chip">C#</span><span class="chip">PHP</span><span class="chip">Bash</span><span class="chip">HTML</span>
+          </div>
+        </div>
+        <div class="skill-card">
+          <h3>Frameworks &amp; backend</h3>
+          <div class="chips">
+            <span class="chip">React</span><span class="chip">Vite</span><span class="chip">Node.js</span>
+            <span class="chip">Deno</span><span class="chip">Supabase</span><span class="chip">PostgreSQL</span>
+            <span class="chip">Capacitor</span>
           </div>
         </div>
         <div class="skill-card">
           <h3>Tools &amp; environment</h3>
           <div class="chips">
-            <span class="chip">Git / GitHub</span><span class="chip">IntelliJ</span><span class="chip">Visual Studio</span>
-            <span class="chip">Oracle Database</span><span class="chip">Node.js</span><span class="chip">JSON</span>
+            <span class="chip">Git / GitHub</span><span class="chip">GitHub Actions</span><span class="chip">Cloudflare Pages</span>
+            <span class="chip">Supabase CLI</span><span class="chip">Oracle Database</span><span class="chip">IntelliJ</span>
+            <span class="chip">Visual Studio</span><span class="chip">Xcode</span>
           </div>
         </div>
         <div class="skill-card">
           <h3>Testing &amp; practices</h3>
           <div class="chips">
-            <span class="chip">JUnit</span><span class="chip">Mocha</span><span class="chip">Chai</span>
-            <span class="chip">GDB</span><span class="chip">Test Plans</span><span class="chip">REST / HTTPS</span>
+            <span class="chip">Vitest</span><span class="chip">Playwright</span><span class="chip">JUnit</span>
+            <span class="chip">Mocha</span><span class="chip">Chai</span><span class="chip">Live-Postgres integration</span>
+            <span class="chip">RLS testing</span><span class="chip">Test Plans</span><span class="chip">REST / HTTPS</span>
           </div>
         </div>
       </div>
@@ -413,20 +423,25 @@
               <span class="p-date">Jun 2026 – Present</span>
             </div>
             <div class="p-role">Full-Stack Web &amp; iOS App · Language Learning</div>
-            <p>A Japanese ↔ English vocabulary-learning app: translate a single word or a whole sentence, save what you find to lists, and lock it in with spaced-repetition flashcards.</p>
+            <p>A Japanese ↔ English vocabulary app that turns any pasted text — subtitles, an article, a transcript — into a word-by-word reader and a spaced-repetition quiz. The interesting engineering is under the UI: a forgetting-curve scheduler tuned against measured data, a self-healing dictionary cache, and authorization enforced in the database rather than the client.</p>
             <ul>
-              <li>Tokenizes Japanese entirely in the browser with kuromoji — a pasted sentence becomes a word-by-word reader that colors each word by how well you know it and resolves inflections back to their dictionary form (行った → 行く).</li>
-              <li>Serves definitions from a self-hosted JMdict dictionary through a Supabase Edge Function, with a Google Cloud Translation fallback and a hard global cost cap.</li>
-              <li>Tracks confidence per individual sense, so homographs (辛い → からい / つらい) are learned as distinct meanings across the spaced-repetition review loop.</li>
-              <li>Backed by Postgres with Supabase Auth and row-level security; packaged as a native iOS app with Capacitor.</li>
+              <li>Runs morphological analysis (kuromoji) in the browser to turn a pasted sentence into a word-by-word reader, coloring each word by how well you know it and resolving inflections back to their dictionary form (行った → 行く).</li>
+              <li>Self-hosts a 217k-entry JMdict + Japanese WordNet dictionary in Postgres as the primary source, demoting paid Google Cloud Translation to a metered fallback for cache misses and whole-sentence glosses only.</li>
+              <li>Makes cost overrun structurally impossible — an atomic, advisory-locked reserve-before-call quota, on-by-default per-user and global caps, and a kill switch that disables all paid calls with no redeploy.</li>
+              <li>Implements a forgetting-curve spaced-repetition scheduler (R = e^−Δt/S) in Postgres over an append-only review log, and fixed three production scheduling bugs by measuring the model against real review data.</li>
+              <li>Enforces authorization in the database — row-level security, SECURITY DEFINER guards, a client-read-only dictionary — proven by 45 live-Postgres integration tests asserting exact SQLSTATEs.</li>
             </ul>
             <div class="tags">
               <span class="tag">TypeScript</span><span class="tag">React</span><span class="tag">Vite</span>
-              <span class="tag">Supabase</span><span class="tag">PostgreSQL</span><span class="tag">Deno</span><span class="tag">Capacitor</span>
+              <span class="tag">Supabase</span><span class="tag">PostgreSQL</span><span class="tag">PL/pgSQL</span>
+              <span class="tag">Deno</span><span class="tag">kuromoji</span><span class="tag">Capacitor</span><span class="tag">Cloudflare Pages</span>
             </div>
             <div class="p-links">
               <a class="p-link demo-btn" href="https://dino-86y.pages.dev/" target="_blank" rel="noopener">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Try it live
+              </a>
+              <a class="p-link" href="docs-dino.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Documentation
               </a>
               <a class="p-link" href="https://github.com/XavierGDelrosario/Dino" target="_blank" rel="noopener">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> Source
