@@ -5,6 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Xavier Del Rosario — Software Developer</title>
 <meta name="description" content="Xavier Del Rosario — Computer Science graduate (UBC). Portfolio of software projects in Java, TypeScript, React, Supabase, SQL, and PHP." />
+
+<!--
+  Social-share (Open Graph) card. LinkedIn, Slack, iMessage and X all fetch this
+  page with a crawler that NEVER runs JS — so these have to be static here in
+  index.html, or every share is a bare grey link. Every URL must be ABSOLUTE for
+  the same reason.
+  The image is built by scripts/build-og-image.mjs; re-run it if the copy below
+  changes so the card and the tags don't disagree.
+  Changing a tag will NOT change an already-shared link — LinkedIn caches by URL
+  for ~7 days; re-scrape at https://www.linkedin.com/post-inspector/.
+-->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Xavier Del Rosario" />
+<meta property="og:url" content="https://xaviergdelrosario.github.io/" />
+<meta property="og:title" content="Xavier Del Rosario — Software Developer" />
+<meta property="og:description" content="Computer Science graduate (UBC). A language-learning app on web and iOS, a course query engine, a normalized legal database, and a chess engine — several running live in the browser, no setup." />
+<meta property="og:image" content="https://xaviergdelrosario.github.io/assets/og.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Xavier Del Rosario, Software Developer — portfolio card listing TypeScript, React, PostgreSQL, Java, Supabase and PHP." />
+<meta property="og:locale" content="en_US" />
+
+<!-- X / Twitter reads its own namespace and ignores og:* for the card type. -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Xavier Del Rosario — Software Developer" />
+<meta name="twitter:description" content="Computer Science graduate (UBC). A language-learning app on web and iOS, a course query engine, a normalized legal database, and a chess engine — several running live in the browser, no setup." />
+<meta name="twitter:image" content="https://xaviergdelrosario.github.io/assets/og.png" />
+
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
