@@ -21,7 +21,13 @@ import { tmpdir, homedir } from "node:os";
 import path from "node:path";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = path.join(ROOT, "assets", "og.png");
+
+// BUMP THIS whenever the card art changes, and update the og:image / twitter:image
+// URLs in index.html to match. LinkedIn caches the image by URL and re-scraping the
+// page via Post Inspector does NOT invalidate it — a filename it has never fetched
+// before is the only thing that reliably shows the new card.
+const VERSION = 2;
+const OUT = path.join(ROOT, "assets", `og-v${VERSION}.png`);
 
 /** First Chromium-family binary that actually exists on this machine. */
 function findBrowser() {
