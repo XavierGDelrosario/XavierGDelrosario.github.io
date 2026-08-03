@@ -117,7 +117,7 @@ const html = `<!doctype html>
 </div>
 
 <div>
-  <h1>Projects you can <span class="hl">open and play with</span>,<br />not just read about.</h1>
+  <h1>Projects you can <span class="hl">try in the browser</span>,<br />not just read about.</h1>
   <p class="sub">A language-learning app on web and iOS, a course query engine, a normalized
   legal database, and a chess engine &mdash; several running live in the browser, no setup.</p>
 </div>
