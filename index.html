@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Xavier Del Rosario — Software Developer</title>
+<title data-i18n="meta.title">Xavier Del Rosario — Software Developer</title>
 <meta name="description" content="Xavier Del Rosario — Computer Science graduate (UBC). Portfolio of software projects in Java, TypeScript, React, Supabase, SQL, and PHP." />
 
 <!--
   Social-share (Open Graph) card. LinkedIn, Slack, iMessage and X all fetch this
-  page with a crawler that NEVER runs JS — so these have to be static here in
-  index.html, or every share is a bare grey link. Every URL must be ABSOLUTE for
-  the same reason.
+  page with a crawler that NEVER runs JS — so these stay static here rather than
+  being set from the i18n script, or every share is a bare grey link. Every URL
+  must be ABSOLUTE for the same reason.
   The image is built by scripts/build-og-image.mjs; re-run it if the copy below
   changes so the card and the tags don't disagree.
   Changing a tag will NOT change an already-shared link — LinkedIn caches by URL
@@ -38,7 +38,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
 <script>
-  // Apply saved theme before paint to avoid a flash
+  // Apply saved theme + language before paint to avoid a flash
   (function () {
     try {
       var t = localStorage.getItem("theme") || "light";
@@ -46,6 +46,11 @@
     } catch (e) {
       document.documentElement.setAttribute("data-theme", "light");
     }
+    try {
+      var l = localStorage.getItem("lang");
+      if (!l) l = (navigator.language || "").toLowerCase().indexOf("ja") === 0 ? "ja" : "en";
+      document.documentElement.setAttribute("lang", l);
+    } catch (e) {}
   })();
 </script>
 <style>
@@ -135,6 +140,25 @@
   .theme-toggle .moon { display: none; }
   html[data-theme="light"] .theme-toggle .moon { display: block; }
   html[data-theme="light"] .theme-toggle .sun { display: none; }
+
+  /* Language toggle — same shell as the theme button, but text instead of an icon */
+  .lang-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 38px; padding: 0 11px; border-radius: 10px; cursor: pointer;
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: .3px;
+    transition: border-color .2s, transform .12s;
+  }
+  .lang-toggle:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+  /* Japanese needs a kana/kanji-capable stack; Inter has no CJK coverage */
+  html[lang="ja"] body {
+    font-family: 'Inter', "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, system-ui, sans-serif;
+  }
+  /* Japanese has no inter-word spaces — wrap on any character, and drop Latin letter-spacing */
+  html[lang="ja"] p, html[lang="ja"] li, html[lang="ja"] .p-role, html[lang="ja"] .modal-sub, html[lang="ja"] .fact .v {
+    line-break: strict; overflow-wrap: anywhere; letter-spacing: 0;
+  }
   @media (max-width: 620px) { .nav-links { display: none; } }
 
   /* Hero */
@@ -218,6 +242,19 @@
   .project ul { margin: 0 0 18px; padding-left: 18px; color: var(--muted); }
   .project ul li { margin-bottom: 6px; }
   .project ul li::marker { color: var(--accent); }
+  /* Paired project thumbnails (built by scripts/build-dino-thumb.mjs). Two columns so
+     the claim and the same sentence through the app's reader read as one before/after;
+     stacked on mobile, where side-by-side would make both illegible. */
+  .p-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0 0 18px; }
+  .p-shots a {
+    display: block; line-height: 0; overflow: hidden;
+    border: 1px solid var(--border); border-radius: 12px;
+    transition: border-color .2s, transform .12s;
+  }
+  .p-shots a:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .p-shots img { width: 100%; height: auto; display: block; }
+  @media (max-width: 680px) { .p-shots { grid-template-columns: 1fr; } }
+
   .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
   .tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 4px 10px; border-radius: 7px; background: rgba(110,168,254,.1); border: 1px solid rgba(110,168,254,.25); color: var(--accent); }
   .p-links { display: flex; flex-wrap: wrap; gap: 16px; }
@@ -351,11 +388,12 @@
     <div class="brand"><span>Xavier Del Rosario</span></div>
     <div class="nav-right">
       <div class="nav-links">
-        <a href="#about">About</a>
-        <a href="#contact" class="cta">Contact</a>
-        <a href="#skills">Skills</a>
-        <a href="#projects">Projects</a>
+        <a href="#about" data-i18n="nav.about">About</a>
+        <a href="#contact" class="cta" data-i18n="nav.contact">Contact</a>
+        <a href="#skills" data-i18n="nav.skills">Skills</a>
+        <a href="#projects" data-i18n="nav.projects">Projects</a>
       </div>
+      <button class="lang-toggle" id="langToggle" aria-label="Switch language / 言語を切り替える" title="English / 日本語">EN</button>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle theme">
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
@@ -369,19 +407,19 @@
   <section id="about">
     <div class="wrap">
       <div class="sec-head">
-        <h2>About me</h2>
+        <h2 data-i18n="about.h">About me</h2>
         <span class="sec-line"></span>
       </div>
       <div class="about-grid">
         <div>
-          <p>I'm a <strong>Computer Science major</strong> who graduated from the <strong>University of British Columbia</strong> in May 2025. My passion for programming started with video games, and it grew into a love for building software that's both functional and reliable.</p>
-          <p>Across my projects I've worked the full stack: designing and normalizing <strong>relational databases</strong>, building <strong>RESTful APIs and query engines</strong>, crafting <strong>PHP and TypeScript web interfaces</strong>, and engineering a complete <strong>chess engine in Java</strong>. I care deeply about <strong>thorough testing</strong> — JUnit, Mocha, and Chai are core to how I work.</p>
-          <p>I'm currently looking for software developer opportunities where I can keep learning and ship dependable products.</p>
+          <p data-i18n="about.p1">I'm a <strong>Computer Science major</strong> who graduated from the <strong>University of British Columbia</strong> in May 2025. My passion for programming started with video games, and it grew into a love for building software that's both functional and reliable.</p>
+          <p data-i18n="about.p2">Across my projects I've worked the full stack: designing and normalizing <strong>relational databases</strong>, building <strong>RESTful APIs and query engines</strong>, crafting <strong>PHP and TypeScript web interfaces</strong>, and engineering a complete <strong>chess engine in Java</strong>. I care deeply about <strong>thorough testing</strong> — JUnit, Mocha, and Chai are core to how I work.</p>
+          <p data-i18n="about.p3">I'm currently looking for software developer opportunities where I can keep learning and ship dependable products.</p>
         </div>
         <div class="facts">
-          <div class="fact"><div class="k">Education</div><div class="v">B.Sc. Computer Science, UBC</div></div>
-          <div class="fact"><div class="k">Graduated</div><div class="v">May 2025</div></div>
-          <div class="fact"><div class="k">Languages</div><div class="v">English · Spanish · Japanese</div></div>
+          <div class="fact"><div class="k" data-i18n="about.edu.k">Education</div><div class="v" data-i18n="about.edu.v">B.Sc. Computer Science, UBC</div></div>
+          <div class="fact"><div class="k" data-i18n="about.grad.k">Graduated</div><div class="v" data-i18n="about.grad.v">May 2025</div></div>
+          <div class="fact"><div class="k" data-i18n="about.lang.k">Languages</div><div class="v" data-i18n="about.lang.v">English · Spanish · Japanese</div></div>
         </div>
       </div>
       <div class="contact-actions" id="contact">
@@ -396,12 +434,12 @@
   <section id="skills">
     <div class="wrap">
       <div class="sec-head">
-        <h2>Skills &amp; tools</h2>
+        <h2 data-i18n="skills.h">Skills &amp; tools</h2>
         <span class="sec-line"></span>
       </div>
       <div class="skill-cols">
         <div class="skill-card">
-          <h3>Languages</h3>
+          <h3 data-i18n="skills.c1">Languages</h3>
           <div class="chips">
             <span class="chip">Java</span><span class="chip">TypeScript</span><span class="chip">JavaScript</span>
             <span class="chip">SQL / PL-pgSQL</span><span class="chip">Python</span><span class="chip">Swift</span><span class="chip">C</span><span class="chip">C++</span>
@@ -409,7 +447,7 @@
           </div>
         </div>
         <div class="skill-card">
-          <h3>Frameworks &amp; backend</h3>
+          <h3 data-i18n="skills.c2">Frameworks &amp; backend</h3>
           <div class="chips">
             <span class="chip">React</span><span class="chip">Vite</span><span class="chip">Node.js</span>
             <span class="chip">Deno</span><span class="chip">Supabase</span><span class="chip">PostgreSQL</span>
@@ -417,7 +455,7 @@
           </div>
         </div>
         <div class="skill-card">
-          <h3>Tools &amp; environment</h3>
+          <h3 data-i18n="skills.c3">Tools &amp; environment</h3>
           <div class="chips">
             <span class="chip">Git / GitHub</span><span class="chip">GitHub Actions</span><span class="chip">Cloudflare Pages</span>
             <span class="chip">Supabase CLI</span><span class="chip">Oracle Database</span><span class="chip">IntelliJ</span>
@@ -425,7 +463,7 @@
           </div>
         </div>
         <div class="skill-card">
-          <h3>Testing &amp; practices</h3>
+          <h3 data-i18n="skills.c4">Testing &amp; practices</h3>
           <div class="chips">
             <span class="chip">Vitest</span><span class="chip">Playwright</span><span class="chip">JUnit</span>
             <span class="chip">Mocha</span><span class="chip">Chai</span><span class="chip">Live-Postgres integration</span>
@@ -439,7 +477,7 @@
   <section id="projects">
     <div class="wrap">
       <div class="sec-head">
-        <h2>Projects</h2>
+        <h2 data-i18n="projects.h">Projects</h2>
         <span class="sec-line"></span>
       </div>
       <div class="projects">
@@ -448,17 +486,25 @@
           <div class="p-num">01</div>
           <div>
             <div class="p-meta">
-              <h3>DINO — Language Learning App</h3>
-              <span class="p-date">Jun 2026 – Present</span>
+              <h3 data-i18n="p1.title">DINO — Language Learning App</h3>
+              <span class="p-date" data-i18n="p1.date">Jun 2026 – Present</span>
             </div>
-            <div class="p-role">Full-Stack Web &amp; iOS App · Language Learning</div>
-            <p>A Japanese ↔ English vocabulary app that turns any pasted text — subtitles, an article, a transcript — into a color-coded word-by-word reader and a spaced-repetition quiz, then reads the topic to suggest related vocabulary at your level.</p>
+            <div class="p-role" data-i18n="p1.role">Full-Stack Web &amp; iOS App · Language Learning</div>
+            <p data-i18n="p1.desc">A Japanese ↔ English vocabulary app that turns any pasted text — subtitles, an article, a transcript — into a color-coded word-by-word reader and a spaced-repetition quiz, then reads the topic to suggest related vocabulary at your level.</p>
+            <div class="p-shots">
+              <a href="https://dino-86y.pages.dev/" target="_blank" rel="noopener">
+                <img src="assets/thumb-portfolio.png" alt="Portfolio" loading="lazy" />
+              </a>
+              <a href="https://dino-86y.pages.dev/" target="_blank" rel="noopener">
+                <img src="assets/thumb-dino.png" alt="Easy and simple to use application for learning Japanese — and the same sentence in Japanese, each word coloured by how well the reader knows it" loading="lazy" />
+              </a>
+            </div>
             <ul>
-              <li>Runs morphological analysis (kuromoji) in the browser to color-code a pasted sentence word-by-word by how well you know it, resolving inflections to their dictionary form (行った → 行く).</li>
-              <li>Self-hosts a 217k-entry JMdict + WordNet dictionary in Postgres, demoting paid Google Translation to a cache-miss fallback — with atomic quota reservation, always-on global caps, and a kill switch that make overspend structurally impossible.</li>
-              <li>Builds the differentiator on Postgres pgvector: ~41k embedded entries expanded into topic-related vocabulary, ranked by domain centrality and filtered to the user's calibrated level.</li>
-              <li>Runs a spaced-repetition scheduler on a measured forgetting curve in Postgres; three scheduling bugs found and fixed by measuring the model against real recall data.</li>
-              <li>Enforces authorization in the database (RLS, SECURITY DEFINER guards, an append-only review log), proven across ~700 tests in 5 layers; live on web and native iOS.</li>
+              <li data-i18n="p1.li1">Runs morphological analysis (kuromoji) in the browser to color-code a pasted sentence word-by-word by how well you know it, resolving inflections to their dictionary form (行った → 行く).</li>
+              <li data-i18n="p1.li2">Self-hosts a 217k-entry JMdict + WordNet dictionary in Postgres, demoting paid Google Translation to a cache-miss fallback — with atomic quota reservation, always-on global caps, and a kill switch that make overspend structurally impossible.</li>
+              <li data-i18n="p1.li3">Builds the differentiator on Postgres pgvector: ~41k embedded entries expanded into topic-related vocabulary, ranked by domain centrality and filtered to the user's calibrated level.</li>
+              <li data-i18n="p1.li4">Runs a spaced-repetition scheduler on a measured forgetting curve in Postgres; three scheduling bugs found and fixed by measuring the model against real recall data.</li>
+              <li data-i18n="p1.li5">Enforces authorization in the database (RLS, SECURITY DEFINER guards, an append-only review log), proven across ~700 tests in 5 layers; live on web and native iOS.</li>
             </ul>
             <div class="tags">
               <span class="tag">TypeScript</span><span class="tag">React</span><span class="tag">Vite</span>
@@ -467,13 +513,13 @@
             </div>
             <div class="p-links">
               <a class="p-link demo-btn" href="https://dino-86y.pages.dev/" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Try it live
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span data-i18n="link.tryLive">Try it live</span>
               </a>
               <a class="p-link" href="docs-dino.html">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Documentation
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> <span data-i18n="link.docs">Documentation</span>
               </a>
               <a class="p-link" href="https://github.com/XavierGDelrosario/Dino" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> Source
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> <span data-i18n="link.source">Source</span>
               </a>
             </div>
           </div>
@@ -483,34 +529,30 @@
           <div class="p-num">02</div>
           <div>
             <div class="p-meta">
-              <h3>UBC Course Query</h3>
-              <span class="p-date">Sep – Dec 2024</span>
+              <h3 data-i18n="p2.title">UBC Course Query</h3>
+              <span class="p-date" data-i18n="p2.date">Sep – Dec 2024</span>
             </div>
-            <div class="p-role">Full-Stack Web Application · Query Engine</div>
-            <p>A web application that lets users upload datasets of UBC course information and explore them through a flexible query engine, with results visualized as interactive bar charts.</p>
+            <div class="p-role" data-i18n="p2.role">Full-Stack Web Application · Query Engine</div>
+            <p data-i18n="p2.desc">A web application for uploading UBC course datasets and exploring them through a JSON query engine, with results shown as interactive bar charts. Two-person team: I built the filtering, aggregation, data conversion, and the frontend's API integration.</p>
             <ul>
-              <li>Built a query engine supporting compound filters (e.g. by professor or grade range) and nested logical operations.</li>
-              <li>Implemented aggregation functions (MIN, MAX, AVG, COUNT) and stable, compound sorting on any key.</li>
-              <li>Built RESTful endpoints over HTTPS to add, remove, and query multiple user-uploaded datasets.</li>
-              <li>Visualized results as bar charts, including overlaying two datasets on one graph to compare them.</li>
-              <li>Wrote a testing harness simulating full request–response cycles to ensure API reliability.</li>
+              <li data-i18n="p2.li1">Built the query engine's filtering: nested AND/OR/NOT logic, numeric comparisons, and wildcard text matching.</li>
+              <li data-i18n="p2.li2">Implemented grouped aggregation (MAX, MIN, AVG, SUM, COUNT) across 64K+ course sections.</li>
+              <li data-i18n="p2.li3">Converted raw zipped course files into validated, typed section records.</li>
+              <li data-i18n="p2.li4">Connected the frontend to the REST API and visualized results as bar charts, including overlaying two datasets on one graph to compare them.</li>
             </ul>
             <div class="tags">
               <span class="tag">TypeScript</span><span class="tag">JavaScript</span><span class="tag">Node.js</span>
-              <span class="tag">PHP</span><span class="tag">Mocha</span><span class="tag">Chai</span><span class="tag">REST</span>
+              <span class="tag">Express</span><span class="tag">Mocha</span><span class="tag">Chai</span><span class="tag">REST</span>
             </div>
             <div class="p-links">
               <a class="p-link demo-btn" href="insight.html">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Run a live query
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span data-i18n="link.runQuery">Run a live query</span>
               </a>
               <a class="p-link" href="docs-ubc.html">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Documentation
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> <span data-i18n="link.docs">Documentation</span>
               </a>
               <a class="p-link" href="https://youtu.be/CcUelxzeaOQ" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Watch demo
-              </a>
-              <a class="p-link" href="https://github.com/XavierGDelrosario/UBC-Insight" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.300-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> Source
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span data-i18n="link.watchDemo">Watch demo</span>
               </a>
             </div>
           </div>
@@ -520,32 +562,32 @@
           <div class="p-num">03</div>
           <div>
             <div class="p-meta">
-              <h3>Legal Mediation Database</h3>
-              <span class="p-date">Jul – Aug 2024</span>
+              <h3 data-i18n="p3.title">Legal Mediation Database</h3>
+              <span class="p-date" data-i18n="p3.date">Jul – Aug 2024</span>
             </div>
-            <div class="p-role">Relational Database · Full-Stack CRUD App</div>
-            <p>A relational database and web interface for an online legal mediation practice specializing in family law — securely organizing client information, case files, relationships, assets, and billing.</p>
+            <div class="p-role" data-i18n="p3.role">Relational Database · Full-Stack CRUD App</div>
+            <p data-i18n="p3.desc">A relational database and web interface for an online legal mediation practice specializing in family law — securely organizing client information, case files, relationships, assets, and billing.</p>
             <ul>
-              <li>Designed and normalized a relational schema modeling clients, case files, and their relationships, optimized for space and query performance.</li>
-              <li>Implemented referential integrity and cascading rules to keep data consistent across inserts, updates, and deletes.</li>
-              <li>Built PHP endpoints and a frontend interface for end-to-end create, read, update, and delete operations.</li>
-              <li>Authored complex SQL queries: joins, aggregation, selection, projection, and division.</li>
+              <li data-i18n="p3.li1">Designed and normalized a relational schema modeling clients, case files, and their relationships, optimized for space and query performance.</li>
+              <li data-i18n="p3.li2">Implemented referential integrity and cascading rules to keep data consistent across inserts, updates, and deletes.</li>
+              <li data-i18n="p3.li3">Built PHP endpoints and a frontend interface for end-to-end create, read, update, and delete operations.</li>
+              <li data-i18n="p3.li4">Authored complex SQL queries: joins, aggregation, selection, projection, and division.</li>
             </ul>
             <div class="tags">
               <span class="tag">SQL</span><span class="tag">Oracle</span><span class="tag">PHP</span><span class="tag">HTML</span><span class="tag">Database Design</span>
             </div>
             <div class="p-links">
               <a class="p-link demo-btn" href="legal.html">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Explore the database
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span data-i18n="link.exploreDb">Explore the database</span>
               </a>
               <a class="p-link" href="docs-legal.html">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Documentation
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> <span data-i18n="link.docs">Documentation</span>
               </a>
               <a class="p-link" href="https://drive.google.com/drive/folders/1OASoYQgNZwOQNLcW5_7cMx2P1TxgmBJl" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Demo videos
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span data-i18n="link.demoVideos">Demo videos</span>
               </a>
               <a class="p-link" href="https://github.com/XavierGDelrosario/Legal-Database" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> Source
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> <span data-i18n="link.source">Source</span>
               </a>
             </div>
           </div>
@@ -555,29 +597,29 @@
           <div class="p-num">04</div>
           <div>
             <div class="p-meta">
-              <h3>Two-Player Chess</h3>
-              <span class="p-date">Sep – Dec 2022</span>
+              <h3 data-i18n="p4.title">Two-Player Chess</h3>
+              <span class="p-date" data-i18n="p4.date">Sep – Dec 2022</span>
             </div>
-            <div class="p-role">Java Desktop Application · Game Engine</div>
-            <p>A fully playable two-player chess game with a Swing GUI, complete rule enforcement, and the ability to save games and step back through any previous position.</p>
+            <div class="p-role" data-i18n="p4.role">Java Desktop Application · Game Engine</div>
+            <p data-i18n="p4.desc">A fully playable two-player chess game with a Swing GUI, complete rule enforcement, and the ability to save games and step back through any previous position.</p>
             <ul>
-              <li>Implemented the complete chess rule set — castling, en passant, promotion, check, checkmate, stalemate, and draw conditions.</li>
-              <li>Added JSON persistence to save and reload games while minimizing file size.</li>
-              <li>Built a move-review feature to replay any position from the move list, reducing memory use on the game class.</li>
-              <li>Wrote thorough JUnit test cases to enforce legal-move restrictions across every piece.</li>
+              <li data-i18n="p4.li1">Implemented the complete chess rule set — castling, en passant, promotion, check, checkmate, stalemate, and draw conditions.</li>
+              <li data-i18n="p4.li2">Added JSON persistence to save and reload games while minimizing file size.</li>
+              <li data-i18n="p4.li3">Built a move-review feature to replay any position from the move list, reducing memory use on the game class.</li>
+              <li data-i18n="p4.li4">Wrote thorough JUnit test cases to enforce legal-move restrictions across every piece.</li>
             </ul>
             <div class="tags">
               <span class="tag">Java</span><span class="tag">Swing</span><span class="tag">JUnit</span><span class="tag">JSON</span><span class="tag">OOP</span>
             </div>
             <div class="p-links">
               <a class="p-link demo-btn" href="#" data-demo="chess">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Play it live
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span data-i18n="link.playLive">Play it live</span>
               </a>
               <a class="p-link" href="docs-chess.html">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Documentation
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> <span data-i18n="link.docs">Documentation</span>
               </a>
               <a class="p-link" href="https://github.com/XavierGDelrosario/ChessGame" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> Source
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> <span data-i18n="link.source">Source</span>
               </a>
             </div>
           </div>
@@ -587,24 +629,24 @@
           <div class="p-num">05</div>
           <div>
             <div class="p-meta">
-              <h3>Sudoku Solver</h3>
-              <span class="p-date">Jan 2023</span>
+              <h3 data-i18n="p5.title">Sudoku Solver</h3>
+              <span class="p-date" data-i18n="p5.date">Jan 2023</span>
             </div>
-            <div class="p-role">Algorithms · Web Scraping</div>
-            <p>A Java program that reads Sudoku puzzles directly from Web Sudoku and solves them automatically using a backtracking search.</p>
+            <div class="p-role" data-i18n="p5.role">Algorithms · Web Scraping</div>
+            <p data-i18n="p5.desc">A Java program that reads Sudoku puzzles directly from Web Sudoku and solves them automatically using a backtracking search.</p>
             <ul>
-              <li>Used jsoup to scrape and parse the HTML of live Sudoku boards from their URL.</li>
-              <li>Implemented a depth-first search (backtracking) algorithm that prunes invalid attempts to find a solution.</li>
+              <li data-i18n="p5.li1">Used jsoup to scrape and parse the HTML of live Sudoku boards from their URL.</li>
+              <li data-i18n="p5.li2">Implemented a depth-first search (backtracking) algorithm that prunes invalid attempts to find a solution.</li>
             </ul>
             <div class="tags">
               <span class="tag">Java</span><span class="tag">jsoup</span><span class="tag">JUnit</span><span class="tag">Swing</span><span class="tag">DFS / Backtracking</span>
             </div>
             <div class="p-links">
               <a class="p-link demo-btn" href="#" data-demo="sudoku">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Try the solver live
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span data-i18n="link.trySolver">Try the solver live</span>
               </a>
               <a class="p-link" href="https://github.com/XavierGDelrosario/Sudoku" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> Source
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 002 12a10 10 0 006.8 9.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 011-2.7 3.6 3.6 0 01.1-2.7s.8-.3 2.7 1a9.3 9.3 0 015 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 011 2.7c0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.9v2.8c0 .3.2.6.7.5A10 10 0 0022 12 10 10 0 0012 2z"/></svg> <span data-i18n="link.source">Source</span>
               </a>
             </div>
           </div>
@@ -619,8 +661,8 @@
 <footer>
   <div class="wrap">
     <div class="brand"><span style="background:var(--accent-grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;">Xavier Del Rosario</span></div>
-    <div>Computer Science · University of British Columbia</div>
-    <div style="margin-top:8px; opacity:.7;">Built with plain HTML &amp; CSS · © 2026</div>
+    <div data-i18n="footer.school">Computer Science · University of British Columbia</div>
+    <div style="margin-top:8px; opacity:.7;" data-i18n="footer.built">Built with plain HTML &amp; CSS · © 2026</div>
   </div>
 </footer>
 
@@ -629,7 +671,7 @@
   <div class="modal">
     <div class="modal-head">
       <h3 id="modalTitle">Demo</h3>
-      <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+      <button class="modal-close" id="modalClose" data-i18n-aria="modal.close" aria-label="Close">×</button>
     </div>
     <p class="modal-sub" id="modalSub"></p>
 
@@ -638,8 +680,8 @@
       <div class="demo-status" id="chessStatus"></div>
       <div id="chessBoard"></div>
       <div class="demo-controls">
-        <button class="accent" id="chessNew">New game</button>
-        <button id="chessFlip">Flip board</button>
+        <button class="accent" id="chessNew" data-i18n="demo.newGame">New game</button>
+        <button id="chessFlip" data-i18n="demo.flip">Flip board</button>
       </div>
     </div>
 
@@ -648,9 +690,9 @@
       <div class="demo-status" id="sudokuStatus"></div>
       <div id="sudokuGrid"></div>
       <div class="demo-controls">
-        <button class="accent" id="sudokuSolve">Solve</button>
-        <button id="sudokuClear">Clear</button>
-        <button id="sudokuSample">Sample puzzle</button>
+        <button class="accent" id="sudokuSolve" data-i18n="demo.solve">Solve</button>
+        <button id="sudokuClear" data-i18n="demo.clear">Clear</button>
+        <button id="sudokuSample" data-i18n="demo.sample">Sample puzzle</button>
       </div>
     </div>
 
@@ -660,6 +702,172 @@
 <script>
 (function () {
   "use strict";
+
+  /* ============================================================
+     I18N — English lives in the markup; this holds the Japanese.
+     Elements carry data-i18n (innerHTML) or data-i18n-aria.
+     Switching back to English restores the snapshot taken on load,
+     so English is never duplicated here.
+     ============================================================ */
+  const JA = {
+    "meta.title": "Xavier Del Rosario — ソフトウェア開発者",
+    "meta.desc": "Xavier Del Rosario — ブリティッシュコロンビア大学（UBC）コンピュータサイエンス卒。Java・TypeScript・React・Supabase・SQL・PHP を用いたソフトウェア開発のポートフォリオ。",
+
+    "nav.about": "自己紹介",
+    "nav.contact": "連絡先",
+    "nav.skills": "スキル",
+    "nav.projects": "プロジェクト",
+
+    "about.h": "自己紹介",
+    "about.p1": "2025年5月にブリティッシュコロンビア大学を卒業した<strong>コンピュータサイエンス専攻</strong>です。プログラミングへの興味はビデオゲームから始まり、実用的で信頼できるソフトウェアを作ることへの情熱に育ちました。",
+    "about.p2": "これまでのプロジェクトでは<strong>リレーショナルデータベース</strong>の設計と正規化、<strong>REST API とクエリエンジン</strong>の構築、<strong>PHP・TypeScript による Web インターフェース</strong>の制作、<strong>Java による完全なチェスエンジン</strong>の開発まで、フルスタックで取り組んできました。<strong>徹底したテスト</strong>を重視しており、JUnit・Mocha・Chai は私の開発の中核です。",
+    "about.p3": "現在は、学び続けながら信頼性の高いプロダクトを届けられるソフトウェア開発者のポジションを探しています。",
+    "about.edu.k": "学歴",
+    "about.edu.v": "理学士（コンピュータサイエンス）UBC",
+    "about.grad.k": "卒業",
+    "about.grad.v": "2025年5月",
+    "about.lang.k": "言語",
+    "about.lang.v": "英語 · スペイン語 · 日本語",
+
+    "skills.h": "スキル・ツール",
+    "skills.c1": "プログラミング言語",
+    "skills.c2": "フレームワーク・バックエンド",
+    "skills.c3": "ツール・開発環境",
+    "skills.c4": "テスト・開発手法",
+
+    "projects.h": "プロジェクト",
+
+    "p1.title": "DINO — 語学学習アプリ",
+    "p1.date": "2026年6月 – 現在",
+    "p1.role": "フルスタック Web・iOS アプリ · 語学学習",
+    "p1.desc": "字幕・記事・書き起こしなど、貼り付けたテキストを単語ごとに色分けしたリーダーと間隔反復クイズに変換し、さらに文章のトピックを読み取ってレベルに合った関連語彙を提案する日英語彙アプリです。",
+    "p1.li1": "ブラウザ上で形態素解析（kuromoji）を実行し、貼り付けた文を習熟度に応じて単語ごとに色分け。活用形は辞書形に解決します（行った → 行く）。",
+    "p1.li2": "21.7万項目の JMdict + WordNet 辞書を Postgres で自己ホストし、有料の Google 翻訳はキャッシュミス時のフォールバックに降格。アトミックなクォータ予約・常時有効な全体上限・キルスイッチにより、使いすぎが構造的に起こり得ない設計です。",
+    "p1.li3": "差別化機能は Postgres pgvector で実現。約4.1万件の埋め込み済みエントリをトピック関連語彙へ拡張し、分野内の中心性でランク付けしてユーザーのレベルに合わせて絞り込みます。",
+    "p1.li4": "実測した忘却曲線に基づく間隔反復スケジューラを Postgres 上で実行。実際の記憶データとモデルを突き合わせることで、3件のスケジューリング不具合を発見・修正しました。",
+    "p1.li5": "認可はデータベース層で強制（RLS、SECURITY DEFINER ガード、追記専用のレビューログ）。5層・約700件のテストで検証し、Web とネイティブ iOS の両方で稼働中です。",
+
+    "p2.title": "UBC コース検索",
+    "p2.date": "2024年9月 – 12月",
+    "p2.role": "フルスタック Web アプリケーション · クエリエンジン",
+    "p2.desc": "UBC の講義データセットをアップロードし、JSON クエリエンジンで探索できる Web アプリケーション。結果はインタラクティブな棒グラフで表示されます。2人チームで、私はフィルタ・集計・データ変換とフロントエンドの API 連携を担当しました。",
+    "p2.li1": "クエリエンジンのフィルタ処理を構築：ネストした AND/OR/NOT、数値比較、ワイルドカードによる文字列一致。",
+    "p2.li2": "6万4千件以上の講義セクションを対象に、グループ化集計（MAX・MIN・AVG・SUM・COUNT）を実装。",
+    "p2.li3": "ZIP 形式の生の講義ファイルを、検証済みの型付きセクションデータに変換。",
+    "p2.li4": "フロントエンドを REST API と接続し、結果を棒グラフで可視化。2つのデータセットを1つのグラフに重ねて比較する機能も実装。",
+
+    "p3.title": "法務調停データベース",
+    "p3.date": "2024年7月 – 8月",
+    "p3.role": "リレーショナルデータベース · フルスタック CRUD アプリ",
+    "p3.desc": "家族法を専門とするオンライン法務調停事務所向けのリレーショナルデータベースと Web インターフェース。依頼者情報・案件ファイル・関係性・資産・請求を安全に整理します。",
+    "p3.li1": "依頼者・案件ファイル・それらの関係性をモデル化したスキーマを設計・正規化し、容量とクエリ性能の両面で最適化。",
+    "p3.li2": "参照整合性とカスケードルールを実装し、挿入・更新・削除をまたいでデータの一貫性を維持。",
+    "p3.li3": "PHP のエンドポイントとフロントエンドを構築し、作成・読み取り・更新・削除を一通り実現。",
+    "p3.li4": "結合・集計・選択・射影・除算を含む複雑な SQL クエリを記述。",
+
+    "p4.title": "2人対戦チェス",
+    "p4.date": "2022年9月 – 12月",
+    "p4.role": "Java デスクトップアプリケーション · ゲームエンジン",
+    "p4.desc": "Swing GUI を備えた2人対戦チェス。ルールを完全に実装し、対局の保存と過去の任意の局面への巻き戻しに対応しています。",
+    "p4.li1": "キャスリング、アンパッサン、プロモーション、チェック、チェックメイト、ステイルメイト、引き分け条件まで、チェスのルールを完全に実装。",
+    "p4.li2": "JSON による永続化を追加し、ファイルサイズを抑えつつ対局の保存と再開に対応。",
+    "p4.li3": "棋譜から任意の局面を再生する検討機能を実装し、ゲームクラスのメモリ使用量を削減。",
+    "p4.li4": "全ての駒について合法手の制約を検証する JUnit テストを網羅的に作成。",
+
+    "p5.title": "数独ソルバー",
+    "p5.date": "2023年1月",
+    "p5.role": "アルゴリズム · Web スクレイピング",
+    "p5.desc": "Web Sudoku から数独の問題を直接読み込み、バックトラッキング探索で自動的に解く Java プログラム。",
+    "p5.li1": "jsoup を用いて、URL から実際の数独盤面の HTML を取得・解析。",
+    "p5.li2": "無効な手を枝刈りしながら解を探索する深さ優先探索（バックトラッキング）を実装。",
+
+    "link.tryLive": "実際に試す",
+    "link.runQuery": "クエリを実行する",
+    "link.exploreDb": "データベースを見る",
+    "link.playLive": "実際に遊ぶ",
+    "link.trySolver": "ソルバーを試す",
+    "link.docs": "ドキュメント",
+    "link.source": "ソースコード",
+    "link.watchDemo": "デモ動画",
+    "link.demoVideos": "デモ動画",
+
+    "footer.school": "コンピュータサイエンス · ブリティッシュコロンビア大学",
+    "footer.built": "プレーンな HTML と CSS で制作 · © 2026",
+
+    "modal.close": "閉じる",
+    "demo.newGame": "新しい対局",
+    "demo.flip": "盤を反転",
+    "demo.solve": "解く",
+    "demo.clear": "クリア",
+    "demo.sample": "サンプル問題",
+
+    "chess.modalTitle": "2人対戦チェス — ライブデモ",
+    "chess.modalSub": "Java/Swing のエンジンをそのままブラウザに再実装しました。駒を選び、ハイライトされたマスをクリックしてください。チェック、チェックメイト、キャスリング、アンパッサン、プロモーションまでルールを完全に判定します。",
+    "sudoku.modalTitle": "数独ソルバー — ライブデモ",
+    "sudoku.modalSub": "Java プロジェクトと同じバックトラッキング（DFS）方式です。自分で問題を入力するかサンプルを読み込んで、「解く」を押してください。",
+
+    "chess.white": "白",
+    "chess.black": "黒",
+    "chess.toMove": "{side}の手番",
+    "chess.check": " — チェック！",
+    "chess.checkmate": "チェックメイト — {side}の勝ち！",
+    "chess.stalemate": "ステイルメイト — 引き分けです。",
+    "sudoku.conflict": "入力に矛盾があります — 数字を確認してください。",
+    "sudoku.solved": "解けました！",
+    "sudoku.noSolution": "この問題に解は存在しません。",
+    "sudoku.ready": "バックトラッキングソルバー準備完了。"
+  };
+
+  let lang = document.documentElement.getAttribute("lang") === "ja" ? "ja" : "en";
+  const ORIG = new WeakMap();
+
+  // t(key, englishFallback) — for strings built in JS rather than sitting in the DOM
+  function t(key, en) {
+    return lang === "ja" && JA[key] ? JA[key] : en;
+  }
+
+  function applyLang(next) {
+    lang = next;
+    document.documentElement.setAttribute("lang", next);
+
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      if (!ORIG.has(el)) ORIG.set(el, el.innerHTML);
+      const ja = JA[el.dataset.i18n];
+      el.innerHTML = next === "ja" && ja ? ja : ORIG.get(el);
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+      const k = el.dataset.i18nAria;
+      if (!ORIG.has(el)) ORIG.set(el, el.getAttribute("aria-label") || "");
+      const ja = JA[k];
+      el.setAttribute("aria-label", next === "ja" && ja ? ja : ORIG.get(el));
+    });
+
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) {
+      if (!ORIG.has(desc)) ORIG.set(desc, desc.getAttribute("content"));
+      desc.setAttribute("content", next === "ja" ? JA["meta.desc"] : ORIG.get(desc));
+    }
+
+    // The button advertises the language it switches TO
+    const btn = document.getElementById("langToggle");
+    if (btn) {
+      btn.textContent = next === "ja" ? "EN" : "日本語";
+      btn.setAttribute("lang", next === "ja" ? "en" : "ja");
+    }
+
+    refreshOpenDemo();
+  }
+
+  applyLang(lang);
+
+  const langBtn = document.getElementById("langToggle");
+  if (langBtn) {
+    langBtn.addEventListener("click", function () {
+      const next = lang === "ja" ? "en" : "ja";
+      applyLang(next);
+      try { localStorage.setItem("lang", next); } catch (e) {}
+    });
+  }
 
   /* ============ Theme toggle ============ */
   const themeBtn = document.getElementById("themeToggle");
@@ -680,12 +888,16 @@
   const panels = {
     chess: {
       el: document.getElementById("demo-chess"),
+      titleKey: "chess.modalTitle",
       title: "Two-Player Chess — Live",
+      subKey: "chess.modalSub",
       sub: "The full Java/Swing engine, reimplemented in the browser. Click a piece, then a highlighted square. All rules enforced: check, checkmate, castling, en passant, promotion."
     },
     sudoku: {
       el: document.getElementById("demo-sudoku"),
+      titleKey: "sudoku.modalTitle",
       title: "Sudoku Solver — Live",
+      subKey: "sudoku.modalSub",
       sub: "The same backtracking (DFS) approach from the Java project. Type your own puzzle or use the sample, then hit Solve."
     }
   };
@@ -694,9 +906,10 @@
     Object.values(panels).forEach(p => (p.el.hidden = true));
     const p = panels[name];
     if (!p) return;
+    currentDemo = name;
     p.el.hidden = false;
-    titleEl.textContent = p.title;
-    subEl.textContent = p.sub;
+    titleEl.textContent = t(p.titleKey, p.title);
+    subEl.textContent = t(p.subKey, p.sub);
     modalBox.classList.toggle("wide", !!p.wide);
     modal.classList.add("open");
     document.body.style.overflow = "hidden";
@@ -706,6 +919,19 @@
   function closeDemo() {
     modal.classList.remove("open");
     document.body.style.overflow = "";
+    currentDemo = null;
+  }
+
+  // `var` so the hoisted binding is safely undefined when applyLang() runs at startup
+  var currentDemo = null;
+  function refreshOpenDemo() {
+    if (!currentDemo) return;
+    const p = panels[currentDemo];
+    if (!p) return;
+    titleEl.textContent = t(p.titleKey, p.title);
+    subEl.textContent = t(p.subKey, p.sub);
+    if (currentDemo === "chess") Chess.refresh();
+    if (currentDemo === "sudoku") Sudoku.refresh();
   }
   document.querySelectorAll(".demo-btn").forEach(b =>
     b.addEventListener("click", e => { if (!b.dataset.demo) return; e.preventDefault(); openDemo(b.dataset.demo); })
@@ -881,14 +1107,16 @@
     function setStatus() {
       const kpos = findKing(board, turn);
       const inCheck = kpos && attacked(board, kpos[0], kpos[1], opp(turn));
-      const side = turn === "w" ? "White" : "Black";
+      const white = t("chess.white", "White"), black = t("chess.black", "Black");
+      const side = turn === "w" ? white : black;
       if (!hasAnyMove(turn)) {
         gameOver = true;
         statusEl.textContent = inCheck
-          ? "Checkmate — " + (turn === "w" ? "Black" : "White") + " wins!"
-          : "Stalemate — it's a draw.";
+          ? t("chess.checkmate", "Checkmate — {side} wins!").replace("{side}", turn === "w" ? black : white)
+          : t("chess.stalemate", "Stalemate — it's a draw.");
       } else {
-        statusEl.textContent = side + " to move" + (inCheck ? " — check!" : "");
+        statusEl.textContent = t("chess.toMove", "{side} to move").replace("{side}", side)
+          + (inCheck ? t("chess.check", " — check!") : "");
       }
     }
 
@@ -938,7 +1166,7 @@
     document.getElementById("chessNew").addEventListener("click", start);
     document.getElementById("chessFlip").addEventListener("click", () => { flipped = !flipped; render(); });
 
-    return { start };
+    return { start, refresh: function () { if (board) setStatus(); } };
   })();
 
   /* ============================================================
@@ -960,6 +1188,13 @@
     ];
     let inputs = [];
 
+    // Remember which message is showing so it can be re-rendered on a language switch
+    let statusKey = null, statusEn = "";
+    function say(key, en) {
+      statusKey = key; statusEn = en;
+      statusEl.textContent = key ? t(key, en) : en;
+    }
+
     function buildGrid() {
       gridEl.innerHTML = "";
       inputs = [];
@@ -976,7 +1211,7 @@
             inp.value = inp.value.replace(/[^1-9]/g, "");
             inp.classList.remove("solved");
             inp.classList.toggle("given", inp.value !== "");
-            statusEl.textContent = "";
+            say(null, "");
           });
           gridEl.appendChild(inp);
           row.push(inp);
@@ -1035,7 +1270,7 @@
 
     function doSolve() {
       const g = read();
-      if (!consistent(g)) { statusEl.textContent = "That puzzle has a conflict — check your entries."; return; }
+      if (!consistent(g)) { say("sudoku.conflict", "That puzzle has a conflict — check your entries."); return; }
       const given = g.map(row => row.map(v => v !== 0));
       if (solve(g)) {
         for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
@@ -1043,24 +1278,24 @@
           inputs[r][c].classList.toggle("given", given[r][c]);
           inputs[r][c].classList.toggle("solved", !given[r][c]);
         }
-        statusEl.textContent = "Solved!";
+        say("sudoku.solved", "Solved!");
       } else {
-        statusEl.textContent = "No solution exists for this puzzle.";
+        say("sudoku.noSolution", "No solution exists for this puzzle.");
       }
     }
 
-    function clear() { load(Array.from({ length: 9 }, () => Array(9).fill(0)), false); statusEl.textContent = ""; }
+    function clear() { load(Array.from({ length: 9 }, () => Array(9).fill(0)), false); say(null, ""); }
     function start() {
       if (!inputs.length) buildGrid();
       load(SAMPLE, true);
-      statusEl.textContent = "Backtracking solver ready.";
+      say("sudoku.ready", "Backtracking solver ready.");
     }
 
     document.getElementById("sudokuSolve").addEventListener("click", doSolve);
     document.getElementById("sudokuClear").addEventListener("click", clear);
-    document.getElementById("sudokuSample").addEventListener("click", () => { load(SAMPLE, true); statusEl.textContent = ""; });
+    document.getElementById("sudokuSample").addEventListener("click", () => { load(SAMPLE, true); say(null, ""); });
 
-    return { start };
+    return { start, refresh: function () { say(statusKey, statusEn); } };
   })();
 })();
 </script>

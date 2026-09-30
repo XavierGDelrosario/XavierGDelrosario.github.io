@@ -117,7 +117,8 @@
       <ul>
         <li>A web application that ingests <strong>UBC course datasets</strong>, stores them, and answers structured queries over them — returning results as JSON and as <strong>interactive bar charts</strong>.</li>
         <li>Datasets are uploaded as zip archives, parsed into an internal model, and <strong>persisted to disk</strong> so they survive restarts and can be re-loaded into memory to answer queries.</li>
-        <li>Exposed both as a programmatic <code>InsightFacade</code> API and over <strong>RESTful HTTPS endpoints</strong>.</li>
+        <li>Exposed both as a programmatic <code>InsightFacade</code> API and over a <strong>REST API</strong>.</li>
+        <li><strong>Two-person team.</strong> My part: the query engine's filtering and aggregation, converting the raw course data into section records, and the frontend's calls to the API.</li>
       </ul>
 
       <h3>Datasets</h3>
@@ -154,7 +155,7 @@
 
       <h3>Tech stack</h3>
       <ul>
-        <li><strong>Backend</strong> — Node.js with an Express HTTPS server; datasets persisted to disk as JSON.</li>
+        <li><strong>Backend</strong> — Node.js with an Express REST server; datasets persisted to disk as JSON.</li>
         <li><strong>Language &amp; tooling</strong> — TypeScript, with ESLint and Prettier enforced on every build.</li>
         <li><strong>Testing</strong> — Mocha + Chai, including <code>chai-http</code> tests that exercise full request–response cycles against the live endpoints.</li>
       </ul>
@@ -162,14 +163,13 @@
       <h3>How it was planned</h3>
       <ul>
         <li>Tracked work as <strong>GitHub Issues</strong> using a structured <strong>User Story</strong> template — each story captured a Role / Goal / Benefit, a <strong>Definition of Done</strong>, a breakdown of engineering tasks, and a time estimate.</li>
-        <li>Defined the <strong>query grammar</strong> and the <strong>RESTful API</strong> contract before implementation, so the frontend and backend could be built against an agreed interface.</li>
+        <li>Worked from the course's <strong>query grammar</strong> and <strong>REST API</strong> contract, so the frontend and backend could be built in parallel against an agreed interface.</li>
         <li>Test-first: query behaviours were validated with a Mocha/Chai suite mirroring the spec.</li>
       </ul>
 
       <div class="links">
         <a class="lnk" href="insight.html">▸ Run a live query</a>
         <a class="lnk" href="https://youtu.be/CcUelxzeaOQ" target="_blank" rel="noopener">Watch demo ↗</a>
-        <a class="lnk" href="https://github.com/XavierGDelrosario/UBC-Insight" target="_blank" rel="noopener">Repository ↗</a>
       </div>
     </article>
   </div>
