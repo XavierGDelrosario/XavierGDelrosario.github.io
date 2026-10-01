@@ -499,7 +499,7 @@
               <li data-i18n="p1.li2">Self-hosts a 217k-entry JMdict + WordNet dictionary in Postgres, demoting paid Google Translation to a cache-miss fallback — with atomic quota reservation, always-on global caps, and a kill switch that make overspend structurally impossible.</li>
               <li data-i18n="p1.li3">Builds the differentiator on Postgres pgvector: ~41k embedded entries expanded into topic-related vocabulary, ranked by domain centrality and filtered to the user's calibrated level.</li>
               <li data-i18n="p1.li4">Runs a spaced-repetition scheduler on a measured forgetting curve in Postgres; three scheduling bugs found and fixed by measuring the model against real recall data.</li>
-              <li data-i18n="p1.li5">Enforces authorization in the database (RLS, SECURITY DEFINER guards, an append-only review log), proven across ~700 tests in 5 layers; live on web and native iOS.</li>
+              <li data-i18n="p1.li5">Enforces authorization in the database (RLS, SECURITY DEFINER guards, an append-only review log), proven across 1,600+ tests in 5 layers; live on web and native iOS.</li>
             </ul>
             <div class="tags">
               <span class="tag">TypeScript</span><span class="tag">React</span><span class="tag">Vite</span>
@@ -740,7 +740,7 @@
     "p1.li2": "21.7万項目の JMdict + WordNet 辞書を Postgres で自己ホストし、有料の Google 翻訳はキャッシュミス時のフォールバックに降格。アトミックなクォータ予約・常時有効な全体上限・キルスイッチにより、使いすぎが構造的に起こり得ない設計です。",
     "p1.li3": "差別化機能は Postgres pgvector で実現。約4.1万件の埋め込み済みエントリをトピック関連語彙へ拡張し、分野内の中心性でランク付けしてユーザーのレベルに合わせて絞り込みます。",
     "p1.li4": "実測した忘却曲線に基づく間隔反復スケジューラを Postgres 上で実行。実際の記憶データとモデルを突き合わせることで、3件のスケジューリング不具合を発見・修正しました。",
-    "p1.li5": "認可はデータベース層で強制（RLS、SECURITY DEFINER ガード、追記専用のレビューログ）。5層・約700件のテストで検証し、Web とネイティブ iOS の両方で稼働中です。",
+    "p1.li5": "認可はデータベース層で強制（RLS、SECURITY DEFINER ガード、追記専用のレビューログ）。5層・1,600件以上のテストで検証し、Web とネイティブ iOS の両方で稼働中です。",
 
     "p2.title": "UBC コース検索",
     "p2.date": "2024年9月 – 12月",
