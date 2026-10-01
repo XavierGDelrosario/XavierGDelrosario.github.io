@@ -242,10 +242,9 @@
   .project ul { margin: 0 0 18px; padding-left: 18px; color: var(--muted); }
   .project ul li { margin-bottom: 6px; }
   .project ul li::marker { color: var(--accent); }
-  /* Paired project thumbnails (built by scripts/build-dino-thumb.mjs). Two columns so
-     the claim and the same sentence through the app's reader read as one before/after;
-     stacked on mobile, where side-by-side would make both illegible. */
-  .p-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0 0 18px; }
+  /* Project thumbnail (built by scripts/build-dino-thumb.mjs): the claim, and the same
+     sentence through the app's reader. */
+  .p-shots { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 0 0 18px; }
   .p-shots a {
     display: block; line-height: 0; overflow: hidden;
     border: 1px solid var(--border); border-radius: 12px;
@@ -253,7 +252,6 @@
   }
   .p-shots a:hover { border-color: var(--accent); transform: translateY(-2px); }
   .p-shots img { width: 100%; height: auto; display: block; }
-  @media (max-width: 680px) { .p-shots { grid-template-columns: 1fr; } }
 
   .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
   .tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 4px 10px; border-radius: 7px; background: rgba(110,168,254,.1); border: 1px solid rgba(110,168,254,.25); color: var(--accent); }
@@ -443,7 +441,7 @@
           <div class="chips">
             <span class="chip">Java</span><span class="chip">TypeScript</span><span class="chip">JavaScript</span>
             <span class="chip">SQL / PL-pgSQL</span><span class="chip">Python</span><span class="chip">Swift</span><span class="chip">C</span><span class="chip">C++</span>
-            <span class="chip">C#</span><span class="chip">PHP</span><span class="chip">Bash</span><span class="chip">HTML</span>
+            <span class="chip">PHP</span><span class="chip">Bash</span><span class="chip">HTML</span>
           </div>
         </div>
         <div class="skill-card">
@@ -492,9 +490,6 @@
             <div class="p-role" data-i18n="p1.role">Full-Stack Web &amp; iOS App · Language Learning</div>
             <p data-i18n="p1.desc">A Japanese ↔ English vocabulary app that turns any pasted text — subtitles, an article, a transcript — into a color-coded word-by-word reader and a spaced-repetition quiz, then reads the topic to suggest related vocabulary at your level.</p>
             <div class="p-shots">
-              <a href="https://dino-86y.pages.dev/" target="_blank" rel="noopener">
-                <img src="assets/thumb-portfolio.png" alt="Portfolio" loading="lazy" />
-              </a>
               <a href="https://dino-86y.pages.dev/" target="_blank" rel="noopener">
                 <img src="assets/thumb-dino.png" alt="Easy and simple to use application for learning Japanese — and the same sentence in Japanese, each word coloured by how well the reader knows it" loading="lazy" />
               </a>
